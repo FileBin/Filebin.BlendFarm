@@ -1,4 +1,26 @@
+## Why I made this fork?
+
+```alias man=LogicReinc```
+
+I know that ```$man``` made a big work to write this application to give opportunity for people render on their hardware at home but i wanna make a short diss about ```$man``` because
+
+I use arch btw and I hate:
+ * When opening brace is on new line (Bruh)
+ * When enums are "strings" (```$man``` it's not JavaScript)
+ * When interface is written in single thread with large tasks
+ * When farm doesn't care if node dies (```$man``` whyyyyyyyyyyyy????)
+
+And I want to implement:
+ * Better stability features like:
+    * pause node
+    * recover after error
+ * Rewrite interface (make it multi-theaded at least)
+ * Rewrite tests to nUnit (why VisualStudio test)
+ * .Net 8
+ * make code cleaner of course
+
 # **BlendFarm**
+
 A open-source, cross-platform, stand-alone, Network Renderer for Blender
 ---
 When I was trying to build a render server I was suprised most network renderers out there for Blender are either outdated, obsolete or require very specific environments to work properly. Thus, I spend the last months writing and testing a stand-alone network renderer that requires barely any setup and should work with most if not all recent versions of Blender. And should even work with future releases. 
