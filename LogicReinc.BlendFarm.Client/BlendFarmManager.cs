@@ -494,7 +494,7 @@ namespace LogicReinc.BlendFarm.Client {
 
                 await CurrentTask.Render();
 
-                Image bitmap = ((CurrentTask is IImageTask) ? (IImageTask)CurrentTask : null)?.FinalImage;
+                Image bitmap = (CurrentTask as IImageTask)?.FinalImage;
 
                 return bitmap;
             } finally {
