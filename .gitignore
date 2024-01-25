@@ -366,3 +366,13 @@ Deploy/
 build.sh
 
 packages-microsoft-prod.deb
+
+# build files
+BlenderData
+VersionCache
+BlenderFiles
+LocalBlendFiles
+ClientSettings
+ServerSettings
+
+
