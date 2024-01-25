@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Filebin.BlendFarm.GUI",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build Filebin.BlendFarm.GUI",
+            "program": "${workspaceFolder}/LogicReinc.BlendFarm/bin/Debug/net6.0/LogicReinc.BlendFarm",
+            "args": [],
+            "cwd": "${workspaceFolder}/environment/BlendFarm.GUI",
+        }
+    ]
+}
