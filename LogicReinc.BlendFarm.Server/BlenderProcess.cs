@@ -6,13 +6,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Server
-{
+namespace LogicReinc.BlendFarm.Server {
     /// <summary>
     /// Represents a single blender process instance
     /// </summary>
-    public class BlenderProcess
-    {
+    public class BlenderProcess {
         private static Regex REGEX_Progress = new Regex("Fra:.*Time:(.*?)\\|.*?Remaining:(.*?)\\|.*?Rendered(.*?)\\/(.*?)Tiles");
         private static Regex REGEX_Progress2 = new Regex("Fra:.*Time:(.*?)\\|.*?Remaining:(.*?)\\|.*?Sample(.*?)\\/([0-9]*)");
 
@@ -53,8 +51,7 @@ namespace LogicReinc.BlendFarm.Server
         public List<string> Results { get; private set; } = new List<string>();
         public List<string> Exceptions { get; private set; } = new List<string>();
 
-        public BlenderProcess(string blender, string args, string version = null, string file = null, long fileId = -1)
-        {
+        public BlenderProcess(string blender, string args, string version = null, string file = null, long fileId = -1) {
             this.CMD = blender;
             this.ARG = args;
             this.Version = version;
@@ -62,25 +59,20 @@ namespace LogicReinc.BlendFarm.Server
             this.FileID = fileId;
         }
 
-        private void HandleContinue()
-        {
+        private void HandleContinue() {
             IsContinueing = true;
             OnBlenderContinue?.Invoke(this);
             int currentCount = 0;
 
-            lock (_continueLock)
-            {
+            lock (_continueLock) {
                 currentCount = ContinueCount + 1;
                 ContinueCount = currentCount;
             }
             if (CONTINUE_TIMEOUT == 0)
                 Cancel();
-            else
-            {
-                Task.Delay(CONTINUE_TIMEOUT).ContinueWith((x) =>
-                {
-                    if (ContinueCount == currentCount && IsContinueing)
-                    {
+            else {
+                Task.Delay(CONTINUE_TIMEOUT).ContinueWith((x) => {
+                    if (ContinueCount == currentCount && IsContinueing) {
                         Console.WriteLine($"Continuation timeout, ending process..");
                         Cancel();
                     }
@@ -91,12 +83,9 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Starts the process and handle output
         /// </summary>
-        public Result Run()
-        {
-            Process process = new Process()
-            {
-                StartInfo = new ProcessStartInfo()
-                {
+        public Result Run() {
+            Process process = new Process() {
+                StartInfo = new ProcessStartInfo() {
                     FileName = CMD,
                     Arguments = ARG,
                     UseShellExecute = false,
@@ -110,36 +99,30 @@ namespace LogicReinc.BlendFarm.Server
             process.Start();
             Active = true;
 
-            while (!process.StandardOutput.EndOfStream)
-            {
+            while (!process.StandardOutput.EndOfStream) {
                 var line = process.StandardOutput.ReadLine();
                 if (ProcessBlenderLine(line))
-                    return new Result()
-                    {
+                    return new Result() {
                         Results = Results.ToArray(),
                         Exceptions = Exceptions.ToArray()
                     };
             }
 
             process.WaitForExit();
-            return new Result()
-            {
+            return new Result() {
                 Results = Results.ToArray(),
                 Exceptions = Exceptions.ToArray()
             };
         }
 
-        public void Continue(string newPath)
-        {
-            lock (_continueLock)
-            {
+        public void Continue(string newPath) {
+            lock (_continueLock) {
                 if (!IsContinueing)
                     throw new InvalidOperationException("Attempting to continue a process that is not in continue state");
                 IsContinueing = false;
             }
             Process.StandardInput.WriteLine(newPath);
-            while (!Process.StandardOutput.EndOfStream)
-            {
+            while (!Process.StandardOutput.EndOfStream) {
                 var line = Process.StandardOutput.ReadLine();
                 if (ProcessBlenderLine(line))
                     return;
@@ -151,8 +134,7 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Cancel the process
         /// </summary>
-        public void Cancel()
-        {
+        public void Cancel() {
             IsContinueing = false;
             Active = false;
             if (Process != null)
@@ -164,19 +146,16 @@ namespace LogicReinc.BlendFarm.Server
         /// Handles a Blender print line
         /// </summary>
         /// <param name="line"></param>
-        private bool ProcessBlenderLine(string line)
-        {
+        private bool ProcessBlenderLine(string line) {
             Console.WriteLine(line);
 
-            try
-            {
+            try {
                 Match match = REGEX_Progress.Match(line);
-                if(match == null || !match.Success || match.Groups.Count != 5)
+                if (match == null || !match.Success || match.Groups.Count != 5)
                     match = REGEX_Progress2.Match(line);
 
                 //Handle Status
-                if (OnBlenderStatus != null && match != null && match.Success && match.Groups.Count == 5)
-                {
+                if (OnBlenderStatus != null && match != null && match.Success && match.Groups.Count == 5) {
                     string timeStr = match.Groups[1].Value.Trim();
                     string remainStr = match.Groups[2].Value.Trim();
                     string renderedStr = match.Groups[3].Value.Trim();
@@ -184,8 +163,7 @@ namespace LogicReinc.BlendFarm.Server
 
 
                     if (OnBlenderStatus != null)
-                        OnBlenderStatus(new Status()
-                        {
+                        OnBlenderStatus(new Status() {
                             TilesFinish = int.Parse(renderedStr),
                             TilesTotal = int.Parse(tilesTotalStr),
 
@@ -193,28 +171,21 @@ namespace LogicReinc.BlendFarm.Server
                             //Time = (int)TimeSpan.Parse(timeStr).TotalSeconds,
                             //TimeRemaining = (int)TimeSpan.Parse(remainStr).TotalSeconds
                         });
-                }
-                else if (line.StartsWith("EXCEPTION:"))
-                {
+                } else if (line.StartsWith("EXCEPTION:")) {
                     string exception = line.Substring("EXCEPTION:".Length);
                     OnBlenderException?.Invoke(exception);
                     Exceptions.Add(exception);
-                }
-                else if (line.StartsWith("SUCCESS:"))
-                {
+                } else if (line.StartsWith("SUCCESS:")) {
                     string result = line.Substring("SUCCESS:".Length);
                     OnBlenderCompleteTask?.Invoke(result);
                     Results.Add(result);
-                }
-                else if (line.StartsWith("AWAITING CONTINUE:"))
-                {
+                } else if (line.StartsWith("AWAITING CONTINUE:")) {
                     HandleContinue();
                     return true;
                 }
 
                 OnBlenderOutput?.Invoke(line);
-            }
-            catch (Exception ex) { }
+            } catch (Exception ex) { }
             return false;
         }
 
@@ -222,16 +193,14 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Contains the rendering status (tiles etc)
         /// </summary>
-        public class Status
-        {
+        public class Status {
             public int Time { get; set; }
             public int TimeRemaining { get; set; }
             public int TilesFinish { get; set; }
             public int TilesTotal { get; set; }
         }
 
-        public class Result
-        {
+        public class Result {
             public string[] Results { get; set; }
             public string[] Exceptions { get; set; }
         }

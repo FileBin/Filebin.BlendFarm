@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode
-{
+namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode {
     [BlendFarmHeader("peek")]
-    public class BlenderPeekRequest: BlendFarmMessage
-    {
+    public class BlenderPeekRequest : BlendFarmMessage {
         public string SessionID { get; set; }
         public string Version { get; set; }
         public long FileID { get; set; }
@@ -14,8 +12,7 @@ namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode
 
 
     [BlendFarmHeader("peekResp")]
-    public class BlenderPeekResponse : BlendFarmMessage
-    {
+    public class BlenderPeekResponse : BlendFarmMessage {
         public bool Success { get; set; }
         public string Message { get; set; }
 

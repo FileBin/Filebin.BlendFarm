@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./environment/BlendFarm.GUI/BlenderData/blender-4.0.2-linux64/4.0/scripts/modules"
+    ]
+}

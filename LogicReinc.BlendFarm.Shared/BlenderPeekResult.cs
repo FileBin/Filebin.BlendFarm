@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Shared
-{
-    public class BlenderPeekResult
-    {
+namespace LogicReinc.BlendFarm.Shared {
+    public class BlenderPeekResult {
         public int RenderWidth { get; set; }
         public int RenderHeight { get; set; }
         public int FrameStart { get; set; }

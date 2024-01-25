@@ -1,27 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Client.ImageTypes
-{
-    public static class ImageConverter
-    {
+namespace LogicReinc.BlendFarm.Client.ImageTypes {
+    public interface IImageConverter {
+        Image FromStream(Stream str);
+    }
+
+    public static class ImageConverter {
         public static DefaultImageConverter Default { get; } = new DefaultImageConverter();
 
-        public static Image Convert(byte[] bytes, string format)
-        {
+        public static Image Convert(byte[] bytes, string format) {
             using (MemoryStream str = new MemoryStream(bytes))
                 return Convert(str, format);
         }
-        public static Image Convert(Stream str, string format)
-        {
+        public static Image Convert(Stream str, string format) {
             format = format.ToUpper().Trim();
-            switch (format)
-            {
+            switch (format) {
                 case "":
                 case "BMP":
                 case "PNG":
@@ -32,10 +26,5 @@ namespace LogicReinc.BlendFarm.Client.ImageTypes
                     return null;
             }
         }
-    }
-
-    public interface IImageConverter
-    {
-        Image FromStream(Stream str);
     }
 }

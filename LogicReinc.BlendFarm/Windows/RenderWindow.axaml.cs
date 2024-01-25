@@ -30,10 +30,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Image = Avalonia.Controls.Image;
 
-namespace LogicReinc.BlendFarm.Windows
-{
-    public class RenderWindow : Window
-    {
+namespace LogicReinc.BlendFarm.Windows {
+    public class RenderWindow : Window {
         private static DirectProperty<RenderWindow, bool> IsRenderingProperty =
             AvaloniaProperty.RegisterDirect<RenderWindow, bool>(nameof(IsRendering), (x) => x.IsRendering);
         private static DirectProperty<RenderWindow, bool> IsLiveChangingProperty =
@@ -144,8 +142,7 @@ namespace LogicReinc.BlendFarm.Windows
 
 
 
-        public RenderWindow()
-        {
+        public RenderWindow() {
             Projects = new ObservableCollection<OpenBlenderProject>()
             {
                 new OpenBlenderProject("C://some/blend/dir/Example Project.blend"){
@@ -173,14 +170,12 @@ namespace LogicReinc.BlendFarm.Windows
             };
             //File = "path/to/some/blendfile.blend";
             CurrentProject = LoadProject("path/to/some/blendfile.blend");
-            Version = new Shared.BlenderVersion()
-            {
+            Version = new Shared.BlenderVersion() {
                 Name = "blender-2.9.2"
             };
             Init();
         }
-        public RenderWindow(BlendFarmManager manager, BlenderVersion version, string blenderFile, string sessionID = null, RenderWindowOptions options = null)
-        {
+        public RenderWindow(BlendFarmManager manager, BlenderVersion version, string blenderFile, string sessionID = null, RenderWindowOptions options = null) {
             options = options ?? new RenderWindowOptions();
             Manager = manager;
             //File = blenderFile;
@@ -188,35 +183,28 @@ namespace LogicReinc.BlendFarm.Windows
             Version = version;
             Options = options;
 
-            using (Stream icoStream = Program.GetIconStream())
-            {
+            using (Stream icoStream = Program.GetIconStream()) {
                 this.Icon = new WindowIcon(icoStream);
             }
 
             Init();
         }
-        private void Init()
-        {
+        private void Init() {
             OS = SystemInfo.GetOSName();
-            if(Manager?.Nodes != null)
-            {
-                foreach(RenderNode node in Manager.Nodes.ToList())
+            if (Manager?.Nodes != null) {
+                foreach (RenderNode node in Manager.Nodes.ToList())
                     Nodes.Add(node);
-                Manager.OnNodeAdded += (manager, node) => Dispatcher.UIThread.InvokeAsync(() =>
-                {
+                Manager.OnNodeAdded += (manager, node) => Dispatcher.UIThread.InvokeAsync(() => {
                     Nodes.Add(node);
                 });
-                Manager.OnNodeRemoved += (manager, node) => Dispatcher.UIThread.InvokeAsync(() =>
-                {
+                Manager.OnNodeRemoved += (manager, node) => Dispatcher.UIThread.InvokeAsync(() => {
                     Nodes.Remove(node);
                 });
-            }
-            else 
-                Nodes =  _testNodes;
+            } else
+                Nodes = _testNodes;
             DataContext = this;
 
-            this.Closed += (a, b) =>
-            {
+            this.Closed += (a, b) => {
                 LocalServer.Stop();
                 Manager.StopFileWatch();
                 Manager.Cleanup();
@@ -224,26 +212,21 @@ namespace LogicReinc.BlendFarm.Windows
             Manager?.StartFileWatch();
 
             RenderNode localNode = Manager.Nodes.FirstOrDefault(x => x.Name == BlendFarmManager.LocalNodeName);
-            if(Options.ConnectLocal)
-            {
+            if (Options.ConnectLocal) {
                 if (localNode == null)
                     MessageWindow.Show(this, "No Local Node", "No local server is available..");
-                else
-                {
+                else {
                     bool didConnect = false;
-                    localNode.OnConnected += (node) =>
-                    {
+                    localNode.OnConnected += (node) => {
                         if (didConnect)
                             return;
                         didConnect = true;
-                        if(Options.ImportSettings)
-                            Task.Run(async () =>
-                            {
+                        if (Options.ImportSettings)
+                            Task.Run(async () => {
                                 await SyncAll();
                                 if (!localNode.IsSynced)
                                     await MessageWindow.Show(this, "Failed to sync Local Node", "Required synced node for importing but failed..");
-                                else
-                                {
+                                else {
                                     await ImportSettings();
                                 }
                             });
@@ -256,8 +239,7 @@ namespace LogicReinc.BlendFarm.Windows
             this.InitializeComponent();
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             AvaloniaXamlLoader.Load(this);
 
             MinHeight = 600;
@@ -286,25 +268,20 @@ namespace LogicReinc.BlendFarm.Windows
             _selectOrder.Items = Enum.GetValues(typeof(TaskOrder));
             _selectOrder.SelectedIndex = 0;
 
-            _image.KeyDown += async (a, b) =>
-            {
-                if (b.Key == Avalonia.Input.Key.Delete)
-                {
+            _image.KeyDown += async (a, b) => {
+                if (b.Key == Avalonia.Input.Key.Delete) {
                     CurrentProject.LastImage = new System.Drawing.Bitmap(1, 1).ToAvaloniaBitmap();
                     RefreshCurrentProject();
                     _lastRenderTime.Text = "";
                 }
             };
 
-            _selectOutputType.SelectionChanged += (s, e) =>
-            {
+            _selectOutputType.SelectionChanged += (s, e) => {
                 string selected = _selectOutputType.SelectedItem?.ToString();
                 string fileExtension = Client.ImageTypes.ImageFormats.GetExtension(selected);
-                if(fileExtension != null)
-                {
-                    if(CurrentProject.AnimationFileFormat != null && 
-                        Client.ImageTypes.ImageFormats.Extensions.Any(ext=>CurrentProject.AnimationFileFormat.ToLower().EndsWith("." + ext.ToLower())))
-                    {
+                if (fileExtension != null) {
+                    if (CurrentProject.AnimationFileFormat != null &&
+                        Client.ImageTypes.ImageFormats.Extensions.Any(ext => CurrentProject.AnimationFileFormat.ToLower().EndsWith("." + ext.ToLower()))) {
                         CurrentProject.AnimationFileFormat = CurrentProject.AnimationFileFormat.Substring(0,
                             CurrentProject.AnimationFileFormat.LastIndexOf(".")) + "." + fileExtension;
                         CurrentProject.TriggerPropertyChange(nameof(CurrentProject.AnimationFileFormat));
@@ -314,10 +291,8 @@ namespace LogicReinc.BlendFarm.Windows
         }
 
 
-        public async Task OpenProjectDialog()
-        {
-            OpenFileDialog dialog = new OpenFileDialog()
-            {
+        public async Task OpenProjectDialog() {
+            OpenFileDialog dialog = new OpenFileDialog() {
                 Title = "Select a Blendfile",
                 Filters = new List<FileDialogFilter>()
                 {
@@ -336,8 +311,7 @@ namespace LogicReinc.BlendFarm.Windows
             paths = paths?.Select(x => Statics.SanitizePath(x)).ToArray();
 
             if (paths != null)
-                foreach (string path in paths)
-                {
+                foreach (string path in paths) {
                     if (!File.Exists(path))
                         await MessageWindow.Show(this, "Invalid Path", $"Path {path} does not exist, and is ignored.");
                     else
@@ -345,23 +319,20 @@ namespace LogicReinc.BlendFarm.Windows
                 }
         }
 
-        public OpenBlenderProject LoadProject(string blendFile)
-        {
+        public OpenBlenderProject LoadProject(string blendFile) {
             string sessionID = Manager?.GetFileSessionID(blendFile) ?? Guid.NewGuid().ToString();
             OpenBlenderProject proj = new OpenBlenderProject(blendFile, sessionID);
 
             var projSettings = BlendFarmSettings.Instance.GetProjectSettings(blendFile);
-            if(projSettings != null)
+            if (projSettings != null)
                 proj.ApplyProjectSettings(projSettings);
 
-            proj.OnBitmapChanged += async (proj, bitmap) =>
-            {
+            proj.OnBitmapChanged += async (proj, bitmap) => {
 
                 if (proj == CurrentProject)
                     await Dispatcher.UIThread.InvokeAsync(() => _image.Source = bitmap); ;
             };
-            proj.OnNetworkedChanged += async (proj, networked) =>
-            {
+            proj.OnNetworkedChanged += async (proj, networked) => {
                 Manager.IsNetworked = networked;
                 foreach (var node in Nodes.Where(x => x.Connected))
                     node.UpdateSyncedStatus(proj.SessionID, false);
@@ -370,17 +341,15 @@ namespace LogicReinc.BlendFarm.Windows
 
             SwitchProject(proj);
 
-            return proj;   
+            return proj;
         }
 
-        public async Task SwitchProject(OpenBlenderProject proj)
-        {
+        public async Task SwitchProject(OpenBlenderProject proj) {
             OpenBlenderProject oldProj = CurrentProject;
             CurrentProject = proj;
             Manager.SetSelectedSessionID(CurrentProject.SessionID);
             TabScrollIndex = Projects.IndexOf(proj);
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
+            await Dispatcher.UIThread.InvokeAsync(() => {
                 RaisePropertyChanged(CurrentProjectProperty, oldProj, proj);
                 RaisePropertyChanged(CurrentSessionProperty, null, CurrentSessionID);
                 RaisePropertyChanged(TabScrollIndexProperty, -1, TabScrollIndex);
@@ -392,78 +361,62 @@ namespace LogicReinc.BlendFarm.Windows
             });
         }
 
-        public async void ConnectAll()
-        {
-            try
-            {
+        public async void ConnectAll() {
+            try {
                 await Manager.ConnectAndPrepareAll();
-            }
-            catch { }
+            } catch { }
         }
-        public async Task SyncAll()
-        {
+        public async Task SyncAll() {
             if (!CurrentProject.UseNetworkedPath)
                 await Manager?.Sync(CurrentProject.BlendFile, UseSyncCompression);
             else
                 await Manager?.Sync(CurrentProject.BlendFile, CurrentProject.NetworkPathWindows, CurrentProject.NetworkPathLinux, CurrentProject.NetworkPathMacOS);
         }
 
-        public void AddNewNode()
-        {
-            if (!string.IsNullOrEmpty(InputClientAddress) && !string.IsNullOrEmpty(InputClientName))
-            {
-                if (BlendFarmSettings.Instance.PastClients.Any(x => x.Key == InputClientName || x.Value.Address == InputClientAddress))
-                {
+        public void AddNewNode() {
+            if (!string.IsNullOrEmpty(InputClientAddress) && !string.IsNullOrEmpty(InputClientName)) {
+                if (BlendFarmSettings.Instance.PastClients.Any(x => x.Key == InputClientName || x.Value.Address == InputClientAddress)) {
                     MessageWindow.Show(this, "Node already exists", "Node already exists, use a different name and address");
                     return;
                 }
-                if(!Regex.IsMatch(InputClientAddress, "^([a-zA-Z0-9\\.]*?):[0-9][0-9]?[0-9]?[0-9]?[0-9]?$"))
-                {
+                if (!Regex.IsMatch(InputClientAddress, "^([a-zA-Z0-9\\.]*?):[0-9][0-9]?[0-9]?[0-9]?[0-9]?$")) {
                     MessageWindow.Show(this, "Invalid Address", "The address provided seems to be invalid, expected format is {hostname}:{port} or {ip}{port}, eg. 192.168.1.123:15000");
                     return;
                 }
 
                 Manager.AddNode(InputClientName, InputClientAddress);
 
-                BlendFarmSettings.Instance.PastClients.Add(InputClientName, new BlendFarmSettings.HistoryClient()
-                {
+                BlendFarmSettings.Instance.PastClients.Add(InputClientName, new BlendFarmSettings.HistoryClient() {
                     Address = InputClientAddress,
                     Name = InputClientName,
                     RenderType = RenderType.CPU
                 });
                 BlendFarmSettings.Instance.Save();
-            }
-            else
+            } else
                 MessageWindow.Show(this, "No name or address", "A node requires both a name and an address");
         }
 
-        public void DeleteNode(RenderNode node)
-        {
+        public void DeleteNode(RenderNode node) {
             Manager.RemoveNode(node.Name);
 
             var nodeEntry = BlendFarmSettings.Instance.PastClients.FirstOrDefault(x => x.Key == node.Name).Key;
-            if (nodeEntry != null)
-            {
+            if (nodeEntry != null) {
                 BlendFarmSettings.Instance.PastClients.Remove(nodeEntry);
                 BlendFarmSettings.Instance.Save();
             }
         }
 
-        public void TerminalNode(RenderNode node)
-        {
+        public void TerminalNode(RenderNode node) {
             DeviceLogWindow.Show(this, node);
         }
-        public async void ConfigureNode(RenderNode node)
-        {
+        public async void ConfigureNode(RenderNode node) {
             DeviceSettingsWindow.Show(this, node);
         }
 
-        public void StartingRender(RenderTask task)
-        {
+        public void StartingRender(RenderTask task) {
             string scene = task.Settings.Scene;
-            
-            if(!CurrentProject.ScenesAvailable.Contains(scene))
-            {
+
+            if (!CurrentProject.ScenesAvailable.Contains(scene)) {
                 CurrentProject.ScenesAvailable.Add(scene);
                 _scenesAvailableBox.Items = CurrentProject.ScenesAvailable;
             }
@@ -471,33 +424,27 @@ namespace LogicReinc.BlendFarm.Windows
             BlendFarmSettings.Instance.ApplyProjectSettings(CurrentProject.BlendFile, CurrentProject.GetProjectSettings());
         }
 
-        public async Task<BlenderPeekResponse> RequestPeek(OpenBlenderProject currentProject)
-        {
+        public async Task<BlenderPeekResponse> RequestPeek(OpenBlenderProject currentProject) {
 
             //Check if any unsynced nodes
             if (!Manager.Nodes.Any(x => x.Connected && x.IsSessionSynced(currentProject.SessionID)))//!x.IsSynced))
             {
-                if (!Manager.Nodes.Any(x => x.Connected))
-                {
+                if (!Manager.Nodes.Any(x => x.Connected)) {
                     MessageWindow.Show(this, "No Nodes", "Need at least one connected node to import");
                     return null;
                 }
 
-                if (await YesNoWindow.Show(this, "No Synced Node", "Require atleast one synced node to import settings, would you like to sync?"))
-                {
+                if (await YesNoWindow.Show(this, "No Synced Node", "Require atleast one synced node to import settings, would you like to sync?")) {
                     if (!CurrentProject.UseNetworkedPath)
                         await Manager?.Sync(CurrentProject.BlendFile, UseSyncCompression);
                     else
                         await Manager?.Sync(CurrentProject.BlendFile, CurrentProject.NetworkPathWindows, CurrentProject.NetworkPathLinux, CurrentProject.NetworkPathMacOS);
-                }
-                else return null;
+                } else return null;
             }
 
             //Start rendering thread
-            return await Task.Run<BlenderPeekResponse>(async () =>
-            {
-                try
-                {
+            return await Task.Run<BlenderPeekResponse>(async () => {
+                try {
                     BlenderPeekResponse peekInfo = await Manager.Peek(CurrentProject.BlendFile);
 
                     if (!peekInfo.Success)
@@ -505,25 +452,19 @@ namespace LogicReinc.BlendFarm.Windows
 
                     return peekInfo;
 
-                }
-                catch (Exception ex)
-                {
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
-                    {
+                } catch (Exception ex) {
+                    await Dispatcher.UIThread.InvokeAsync(async () => {
                         MessageWindow.Show(this, "Failed Peek", "Failed peek due to:" + ex.Message);
                     });
                     return null;
                 }
             });
         }
-        public async Task ImportSettings()
-        {
+        public async Task ImportSettings() {
             OpenBlenderProject currentProject = CurrentProject;
             BlenderPeekResponse peekInfo = await RequestPeek(currentProject);
-            if(peekInfo != null)
-            {
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
+            if (peekInfo != null) {
+                await Dispatcher.UIThread.InvokeAsync(() => {
                     currentProject.RenderWidth = peekInfo.RenderWidth;
                     currentProject.RenderHeight = peekInfo.RenderHeight;
                     currentProject.FrameStart = peekInfo.FrameStart;
@@ -539,32 +480,27 @@ namespace LogicReinc.BlendFarm.Windows
                 });
             }
         }
-        public async Task ImportMeta()
-        {
+        public async Task ImportMeta() {
             OpenBlenderProject currentProject = CurrentProject;
             BlenderPeekResponse peekInfo = await RequestPeek(currentProject);
-            if (peekInfo != null)
-            {
+            if (peekInfo != null) {
                 LoadMeta(currentProject, peekInfo);
             }
         }
 
-        public void LoadMeta(OpenBlenderProject project, BlenderPeekResponse peekInfo)
-        {
+        public void LoadMeta(OpenBlenderProject project, BlenderPeekResponse peekInfo) {
             project.CamerasAvailable.Clear();
             project.CamerasAvailable.AddRange(peekInfo.Cameras);
             project.Camera = peekInfo.SelectedCamera;
             project.ScenesAvailable.Clear();
             project.ScenesAvailable.AddRange(peekInfo.Scenes);
             project.Scene = peekInfo.SelectedScene;
-            if (project.ScenesAvailable.Count > 0)
-            {
+            if (project.ScenesAvailable.Count > 0) {
                 _scenesAvailableBox.Items = project.ScenesAvailable;
                 _scenesBox.IsVisible = false;
                 _scenesAvailableBox.IsVisible = true;
             }
-            if(project.CamerasAvailable.Count > 0)
-            {
+            if (project.CamerasAvailable.Count > 0) {
                 _camerasAvailableBox.Items = project.CamerasAvailable;
                 _camerasBox.IsVisible = false;
                 _camerasAvailableBox.IsVisible = true;
@@ -576,40 +512,33 @@ namespace LogicReinc.BlendFarm.Windows
                 nameof(project.Scene));
         }
 
-        public async Task Test()
-        {
+        public async Task Test() {
             OpenBlenderProject currentProject = CurrentProject;
-            try
-            {
+            try {
                 LocalServer.Manager.ExtractDependencies(Version.Name, currentProject.BlendFile, Manager.GetOrCreateSession(currentProject.BlendFile).FileID);
-            }
-            catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 MessageWindow.Show(this, "Test failed", ex.Message);
             }
         }
 
         //Singular
         public async Task Render() => await Render(false, false);
-        public async Task Render(bool noSync, bool noExcep = false)
-        {
+        public async Task Render(bool noSync, bool noExcep = false) {
             OpenBlenderProject currentProject = CurrentProject;
 
             if (currentProject.CurrentTask != null)
                 return;
 
             //Show Progressbar
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
+            await Dispatcher.UIThread.InvokeAsync(() => {
                 this._imageProgress.IsVisible = true;
                 this._imageProgress.IsIndeterminate = true;
             });
 
             //Check if any unsynced nodes
-            if(!noSync && Manager.Nodes.Any(x=> x.Connected && !x.IsSessionSynced(currentProject.SessionID)))//!x.IsSynced))
+            if (!noSync && Manager.Nodes.Any(x => x.Connected && !x.IsSessionSynced(currentProject.SessionID)))//!x.IsSynced))
             {
-                if (await YesNoNeverWindow.Show(this, "Unsynced nodes", "You have nodes that are not yet synced, would you like to sync them to use for rendering?", "syncBeforeRendering"))
-                {
+                if (await YesNoNeverWindow.Show(this, "Unsynced nodes", "You have nodes that are not yet synced, would you like to sync them to use for rendering?", "syncBeforeRendering")) {
                     if (!CurrentProject.UseNetworkedPath)
                         await Manager?.Sync(CurrentProject.BlendFile, UseSyncCompression);
                     else
@@ -618,21 +547,17 @@ namespace LogicReinc.BlendFarm.Windows
             }
 
             //Start rendering thread
-            await Task.Run(async () =>
-            {
-                try
-                {
+            await Task.Run(async () => {
+                try {
                     Stopwatch watch = new Stopwatch();
                     watch.Start();
 
 
                     //Create Task
 
-                    RenderTask task = Manager.GetImageTask(CurrentProject.BlendFile, GetSettingsFromUI(), async (task, updated) =>
-                    {
+                    RenderTask task = Manager.GetImageTask(CurrentProject.BlendFile, GetSettingsFromUI(), async (task, updated) => {
                         //Apply image to canvas
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
+                        await Dispatcher.UIThread.InvokeAsync(() => {
                             currentProject.LastImage = updated.ToAvaloniaBitmap();
                             if (CurrentProject == currentProject)
                                 RaisePropertyChanged(CurrentProjectProperty, null, CurrentProject);
@@ -643,10 +568,8 @@ namespace LogicReinc.BlendFarm.Windows
                     currentProject.SetRenderTask(task);
 
                     //Progress Updating
-                    currentProject.CurrentTask.OnProgress += async (task, progress) =>
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
+                    currentProject.CurrentTask.OnProgress += async (task, progress) => {
+                        await Dispatcher.UIThread.InvokeAsync(() => {
                             this._imageProgress.IsIndeterminate = false;
                             this._imageProgress.Value = progress * 100;
                         });
@@ -663,12 +586,10 @@ namespace LogicReinc.BlendFarm.Windows
                     var finalImage = ((currentProject.CurrentTask is IImageTask) ? (IImageTask)currentProject.CurrentTask : null)?.FinalImage;
 
                     //Finalize
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        if (finalImage != null)
-                        {
+                    await Dispatcher.UIThread.InvokeAsync(() => {
+                        if (finalImage != null) {
                             currentProject.LastImage = finalImage.ToAvaloniaBitmap();
-                            if(currentProject == CurrentProject)
+                            if (currentProject == CurrentProject)
                                 RaisePropertyChanged(CurrentProjectProperty, null, CurrentProject);
 
                             finalImage.Save("lastRender.png");
@@ -678,39 +599,31 @@ namespace LogicReinc.BlendFarm.Windows
                     });
                     watch.Stop();
 
-                }
-                catch (Exception ex)
-                {
-                    if(!noExcep)
-                        await Dispatcher.UIThread.InvokeAsync(async () =>
-                        {
+                } catch (Exception ex) {
+                    if (!noExcep)
+                        await Dispatcher.UIThread.InvokeAsync(async () => {
                             MessageWindow.Show(this, "Failed Render", "Failed render due to:" + ex.Message);
                         });
-                }
-                finally
-                {
+                } finally {
                     Manager.ClearLastTask();
                     currentProject.SetRenderTask(null);
                     Dispatcher.UIThread.InvokeAsync(() => RaisePropertyChanged(IsRenderingProperty, true, false));
                 }
             });
         }
-        public async void RenderAnimation()
-        {
+        public async void RenderAnimation() {
             if (CurrentTask != null)
                 return;
 
             OpenBlenderProject currentProject = CurrentProject;
 
             //Validate provided fileformat
-            if(!currentProject.AnimationFileFormat.Contains("#"))
-            {
+            if (!currentProject.AnimationFileFormat.Contains("#")) {
                 await MessageWindow.Show(this, "Invalid file format", "File format should contain a '#' for frame number");
                 return;
             }
             string validAnimationFileName = currentProject.AnimationFileFormat.Replace("#", "");
-            if(Path.GetInvalidFileNameChars().Any(x=>validAnimationFileName.Contains(x)))
-            {
+            if (Path.GetInvalidFileNameChars().Any(x => validAnimationFileName.Contains(x))) {
                 await MessageWindow.Show(this, "Invalid file format", "File name for animation frames contains illegal characters");
                 return;
             }
@@ -724,10 +637,8 @@ namespace LogicReinc.BlendFarm.Windows
 
             _lastAnimationDirectory = outputDir;
 
-            if (Manager.Nodes.Any(x => x.Connected && !x.IsSessionSynced(currentProject.SessionID)))
-            {
-                if (await YesNoNeverWindow.Show(this, "Unsynced nodes", "You have nodes that are not yet synced, would you like to sync them to use for rendering?", "syncBeforeRendering"))
-                {
+            if (Manager.Nodes.Any(x => x.Connected && !x.IsSessionSynced(currentProject.SessionID))) {
+                if (await YesNoNeverWindow.Show(this, "Unsynced nodes", "You have nodes that are not yet synced, would you like to sync them to use for rendering?", "syncBeforeRendering")) {
                     if (!currentProject.UseNetworkedPath)
                         await Manager.Sync(currentProject.BlendFile, UseSyncCompression);
                     else
@@ -735,36 +646,27 @@ namespace LogicReinc.BlendFarm.Windows
                 }
             }
 
-            await Task.Run(async () =>
-            {
-                try
-                {
+            await Task.Run(async () => {
+                try {
                     Stopwatch watch = new Stopwatch();
                     watch.Start();
 
-                    
+
                     //Create Task
-                    RenderTask rtask = Manager.GetAnimationTask(currentProject.BlendFile, currentProject.FrameStart, currentProject.FrameEnd, GetSettingsFromUI(), async (task, frame) =>
-                    {
+                    RenderTask rtask = Manager.GetAnimationTask(currentProject.BlendFile, currentProject.FrameStart, currentProject.FrameEnd, GetSettingsFromUI(), async (task, frame) => {
                         string filePath = Path.Combine(outputDir, animationFileFormat.Replace("#", task.Frame.ToString()));
 
-                        try
-                        {
+                        try {
                             File.WriteAllBytes(filePath, frame.Image);
-                        }
-                        catch (Exception ex)
-                        {
+                        } catch (Exception ex) {
                             await MessageWindow.ShowOnUIThread(this, "Frame Save Error", $"Animation frame {task.Frame} failed to save due to:" + ex.Message);
                             return;
                         }
 
                         //Apply image to canvas
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            try
-                            {
-                                using (System.Drawing.Image img = ImageConverter.Convert(frame.Image, task.Parent.Settings.RenderFormat))
-                                {
+                        await Dispatcher.UIThread.InvokeAsync(() => {
+                            try {
+                                using (System.Drawing.Image img = ImageConverter.Convert(frame.Image, task.Parent.Settings.RenderFormat)) {
                                     if (img != null)
                                         currentProject.LastImage = img.ToAvaloniaBitmap();
                                     else
@@ -772,9 +674,7 @@ namespace LogicReinc.BlendFarm.Windows
                                 }
                                 if (currentProject == CurrentProject)
                                     RaisePropertyChanged(CurrentProjectProperty, null, CurrentProject);
-                            }
-                            catch (Exception ex)
-                            {
+                            } catch (Exception ex) {
                                 _ = MessageWindow.Show(this, "GUI Exception", "An error occured trying to load animation Bitmap in GUI.\n(Animation frame should still be saved)");
                             }
                             _lastRenderTime.Text = watch.Elapsed.ToString();
@@ -783,16 +683,13 @@ namespace LogicReinc.BlendFarm.Windows
                     currentProject.SetRenderTask(rtask);
 
                     //Progress Updating
-                    currentProject.CurrentTask.OnProgress += async (task, progress) =>
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
+                    currentProject.CurrentTask.OnProgress += async (task, progress) => {
+                        await Dispatcher.UIThread.InvokeAsync(() => {
                             this._imageProgress.IsIndeterminate = false;
                             this._imageProgress.Value = progress * 100;
                         });
                     };
-                    Dispatcher.UIThread.InvokeAsync(async () =>
-                    {
+                    Dispatcher.UIThread.InvokeAsync(async () => {
                         StartingRender(rtask);
                     });
 
@@ -805,13 +702,9 @@ namespace LogicReinc.BlendFarm.Windows
 
                     watch.Stop();
 
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     await MessageWindow.ShowOnUIThread(this, "Failed Render", "Failed render due to:" + ex.Message);
-                }
-                finally
-                {
+                } finally {
                     Manager.ClearLastTask();
                     currentProject.SetRenderTask(null);
                     await Dispatcher.UIThread.InvokeAsync(() => RaisePropertyChanged(IsRenderingProperty, true, false));
@@ -819,42 +712,32 @@ namespace LogicReinc.BlendFarm.Windows
             });
         }
 
-        public async Task CancelRender()
-        {
+        public async Task CancelRender() {
             await CurrentProject.CurrentTask?.Cancel();
             CurrentProject.SetRenderTask(null);
         }
 
-        public void SaveAsDefault()
-        {
+        public void SaveAsDefault() {
             CurrentProject?.SaveAsDefault();
         }
 
         //Queue
-        public void StartQueueingProcess()
-        {
+        public void StartQueueingProcess() {
             if (_queueThread != null)
                 return;
-            _queueThread = new Thread(async () =>
-            {
+            _queueThread = new Thread(async () => {
                 Task lastTask = null;
                 QueueItem currentItem = null;
-                while (IsQueueing)
-                {
+                while (IsQueueing) {
                     Thread.Sleep(500);
-                    try
-                    {
-                        if (currentItem == null)
-                        {
+                    try {
+                        if (currentItem == null) {
                             QueueItem item = GetNextQueueItem();
                             currentItem = item;
                             if (item != null)
                                 lastTask = item.Execute(this, Manager);
-                        }
-                        else
-                        {
-                            if (!currentItem.Active)
-                            {
+                        } else {
+                            if (!currentItem.Active) {
                                 currentItem = null;
                                 Thread.Sleep(1500);
                             }
@@ -863,16 +746,12 @@ namespace LogicReinc.BlendFarm.Windows
                         int queueCount = 0;
                         lock (Queue)
                             queueCount = Queue.Count(x => x.Active);
-                        if(queueCount != _queueCount)
-                        {
+                        if (queueCount != _queueCount) {
                             _queueCount = queueCount;
                             Dispatcher.UIThread.InvokeAsync(() => RaisePropertyChanged(QueueNameProperty, null, QueueName));
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (!await YesNoWindow.Show(this, "Exception in Queue", $"Exception \"{ex.Message}\" occured in queue. Continue queue process?"))
-                        {
+                    } catch (Exception ex) {
+                        if (!await YesNoWindow.Show(this, "Exception in Queue", $"Exception \"{ex.Message}\" occured in queue. Continue queue process?")) {
                             IsQueueing = false;
                             RaisePropertyChanged(IsQueueingProperty, true, false);
                             break;
@@ -882,114 +761,98 @@ namespace LogicReinc.BlendFarm.Windows
             });
             _queueThread.Start();
         }
-        
-        public async Task AddToQueueReplace()
-        {
+
+        public async Task AddToQueueReplace() {
             OpenBlenderProject proj = CurrentProject;
 
             QueueItem existing = GetProjectQueueItem(proj);
 
-            if(existing != null)
-            {
+            if (existing != null) {
                 if (existing.Active)
                     await existing.UpdateValues(this, Manager, GetSettingsFromUI(proj));
-            }
-            else
+            } else
                 await AddToQueueNew();
         }
-        public async Task AddToQueueNew()
-        {
+        public async Task AddToQueueNew() {
             OpenBlenderProject proj = CurrentProject;
 
             RenderManagerSettings settings = GetSettingsFromUI(proj);
 
             string saveTo = null;
-            if(await YesNoNeverWindow.Show(this, "Queue Save", "Would you like to save this render to a specific path when it finishes?", "saveQueue"))
-            {
+            if (await YesNoNeverWindow.Show(this, "Queue Save", "Would you like to save this render to a specific path when it finishes?", "saveQueue")) {
                 saveTo = await OpenSaveFileDialog("Save BlendFarm queue result", "render.png");
             }
 
             QueueItem item = new QueueItem(this, proj, settings, saveTo);
 
-            lock(Queue)
+            lock (Queue)
                 Queue.Add(item);
 
 
         }
-        public async Task AddAnimationToQueueNew()
-        {
+        public async Task AddAnimationToQueueNew() {
             OpenBlenderProject proj = CurrentProject;
 
             RenderManagerSettings settings = GetSettingsFromUI(proj);
 
             string saveTo = await OpenFolderDialog("Directory to save frames to");
 
-            QueueItem item = new QueueItem(this, proj, settings, saveTo, (proj.FrameEnd - proj.FrameStart) + 1)
-            {
+            QueueItem item = new QueueItem(this, proj, settings, saveTo, (proj.FrameEnd - proj.FrameStart) + 1) {
                 FrameFormat = proj.AnimationFileFormat
             };
 
             lock (Queue)
                 Queue.Add(item);
         }
-        public QueueItem GetNextQueueItem()
-        {
+        public QueueItem GetNextQueueItem() {
             lock (Queue)
                 return Queue.FirstOrDefault(x => x.Active);
         }
-        public void RemoveQueueItem(QueueItem item)
-        {
-            lock(Queue)
+        public void RemoveQueueItem(QueueItem item) {
+            lock (Queue)
                 Queue.Remove(item);
             if (item.Task != null && !item.Completed && item.Active)
                 item.CancelQueueItem();
         }
 
 
-        public async Task SaveImage()
-        {
+        public async Task SaveImage() {
             string result = await OpenSaveFileDialog("Save current BlendFarm render", "render.png");
             if (result != null && CurrentProject.LastImage != null)
                 CurrentProject.LastImage.Save(result);
         }
 
 
-        public void StartLiveRender()
-        {
-            if (!IsLiveChanging)
-            {
+        public void StartLiveRender() {
+            if (!IsLiveChanging) {
                 IsLiveChanging = true;
                 Manager.OnFileChanged += RenderOnFileChange;
                 Manager.AlwaysUpdateFile = true;
                 RaisePropertyChanged(IsLiveChangingProperty, false, true);
             }
         }
-        public void StopLiveRender()
-        {
+        public void StopLiveRender() {
             Manager.AlwaysUpdateFile = false;
             Manager.OnFileChanged -= RenderOnFileChange;
             IsLiveChanging = false;
             RaisePropertyChanged(IsLiveChangingProperty, true, false);
         }
 
-        public async Task SelectNetworkWindowsPath()
-        {
+        public async Task SelectNetworkWindowsPath() {
             string path = await OpenFileDialog("Select Network Path for Windows nodes", "Blend file (.blend)", "blend");
             if (path == null)
                 return;
 
             CurrentProject?.SetWindowsNetworkPath(path);
         }
-        public async Task SelectNetworkLinuxPath()
-        {
+        public async Task SelectNetworkLinuxPath() {
             string path = await OpenFileDialog("Select Network Path for Linux nodes", "Blend file (.blend)", "blend");
             if (path == null)
                 return;
 
             CurrentProject?.SetLinuxNetworkPath(path);
         }
-        public async Task SelectNetworkMacOSPath()
-        {
+        public async Task SelectNetworkMacOSPath() {
             string path = await OpenFileDialog("Select Network Path for MacOS nodes", "Blend file (.blend)", "blend");
             if (path == null)
                 return;
@@ -999,31 +862,24 @@ namespace LogicReinc.BlendFarm.Windows
 
 
         //Buttons Top
-        public void Github()
-        {
+        public void Github() {
             OpenUrl("https://github.com/LogicReinc/LogicReinc.BlendFarm");
         }
-        public void Patreon()
-        {
+        public void Patreon() {
             OpenUrl("https://www.patreon.com/LogicReinc");
         }
-        public void Help()
-        {
+        public void Help() {
             OpenUrl("https://www.youtube.com/watch?v=EXdwD5t53wc");
         }
-        private static void OpenUrl(string url)
-        {
-            Process.Start(new ProcessStartInfo(url)
-            {
+        private static void OpenUrl(string url) {
+            Process.Start(new ProcessStartInfo(url) {
                 UseShellExecute = true
             });
         }
 
         //Dialogs
-        public async Task<string> OpenSaveFileDialog(string title, string initialName)
-        {
-            SaveFileDialog dialog = new SaveFileDialog()
-            {
+        public async Task<string> OpenSaveFileDialog(string title, string initialName) {
+            SaveFileDialog dialog = new SaveFileDialog() {
                 Title = title
             };
             dialog.InitialFileName = initialName;
@@ -1031,17 +887,14 @@ namespace LogicReinc.BlendFarm.Windows
             string result = await dialog.ShowAsync(this);
             return Statics.SanitizePath(result);
         }
-        public async Task<string> OpenFolderDialog(string title)
-        {
+        public async Task<string> OpenFolderDialog(string title) {
             string outputDir = null;
 
             //Request output directory and UI
-            await Dispatcher.UIThread.InvokeAsync(async () =>
-            {
+            await Dispatcher.UIThread.InvokeAsync(async () => {
                 outputDir = null;
 
-                OpenFolderDialog dialog = new OpenFolderDialog()
-                {
+                OpenFolderDialog dialog = new OpenFolderDialog() {
                     Title = title
                 };
 
@@ -1061,10 +914,8 @@ namespace LogicReinc.BlendFarm.Windows
                 return Path.GetFullPath(outputDir);
         }
 
-        public async Task<string> OpenFileDialog(string title, string fileName, string fileExtension)
-        {
-            OpenFileDialog dialog = new OpenFileDialog()
-            {
+        public async Task<string> OpenFileDialog(string title, string fileName, string fileExtension) {
+            OpenFileDialog dialog = new OpenFileDialog() {
                 Title = title,
                 AllowMultiple = false,
                 Filters = new List<FileDialogFilter>()
@@ -1088,18 +939,16 @@ namespace LogicReinc.BlendFarm.Windows
 
 
         //Buttons Tabs
-        public void ScrollRight()
-        {
+        public void ScrollRight() {
             TabScrollIndex = Math.Min(Projects.Count - 1, TabScrollIndex + 1);
             RaisePropertyChanged(TabScrollIndexProperty, -1, TabScrollIndex);
             RaisePropertyChanged(CanTabScrollLeftProperty, !CanTabScrollLeft, CanTabScrollLeft);
             RaisePropertyChanged(CanTabScrollRightProperty, !CanTabScrollLeft, CanTabScrollRight);
 
-            if(TabScrollIndex < Projects.Count && TabScrollIndex >= 0)
+            if (TabScrollIndex < Projects.Count && TabScrollIndex >= 0)
                 SwitchProject(Projects[TabScrollIndex]);
         }
-        public void ScrollLeft()
-        {
+        public void ScrollLeft() {
             TabScrollIndex = Math.Max(0, TabScrollIndex - 1);
             RaisePropertyChanged(TabScrollIndexProperty, -1, TabScrollIndex);
             RaisePropertyChanged(CanTabScrollLeftProperty, !CanTabScrollLeft, CanTabScrollLeft);
@@ -1110,27 +959,21 @@ namespace LogicReinc.BlendFarm.Windows
         }
 
         //UI Properties
-        public void RefreshCurrentProject()
-        {
-            Dispatcher.UIThread.InvokeAsync(() =>
-            {
+        public void RefreshCurrentProject() {
+            Dispatcher.UIThread.InvokeAsync(() => {
                 RaisePropertyChanged(CurrentProjectProperty, null, CurrentProject);
             });
         }
 
         //Util
-        private QueueItem GetProjectQueueItem(OpenBlenderProject proj)
-        {
-            lock (Queue)
-            {
+        private QueueItem GetProjectQueueItem(OpenBlenderProject proj) {
+            lock (Queue) {
                 return Queue.FirstOrDefault(x => x.Project == proj);
             }
         }
-        private RenderManagerSettings GetSettingsFromUI(OpenBlenderProject proj = null)
-        {
+        private RenderManagerSettings GetSettingsFromUI(OpenBlenderProject proj = null) {
             proj = proj ?? CurrentProject;
-            return new RenderManagerSettings()
-            {
+            return new RenderManagerSettings() {
                 Frame = proj.FrameStart,
                 Scene = proj.Scene,
                 Camera = proj.Camera,
@@ -1150,18 +993,14 @@ namespace LogicReinc.BlendFarm.Windows
             };
         }
 
-        private void RenderOnFileChange(BlendFarmManager manager)
-        {
+        private void RenderOnFileChange(BlendFarmManager manager) {
             if (CurrentTask?.Progress <= 0)
                 return;
-            Task.Run(async () =>
-            {
-                if (IsRendering)
-                {
+            Task.Run(async () => {
+                if (IsRendering) {
                     await CancelRender();
                 }
-                if (!IsRendering)
-                {
+                if (!IsRendering) {
                     await SyncAll();
                     await Render(true, true);
                 }
@@ -1171,36 +1010,27 @@ namespace LogicReinc.BlendFarm.Windows
 
 
         //Events
-        public async void CheckUseQueue(object sender, RoutedEventArgs args)
-        {
+        public async void CheckUseQueue(object sender, RoutedEventArgs args) {
             ToggleSwitch sw = sender as ToggleSwitch;
 
-            if(sw.IsChecked ?? false)
-            {
+            if (sw.IsChecked ?? false) {
                 IsQueueing = true;
                 await Dispatcher.UIThread.InvokeAsync(() => RaisePropertyChanged(IsQueueingProperty, false, true));
                 StartQueueingProcess();
-            }
-            else
-            {
-                if(GetNextQueueItem() != null)
-                {
+            } else {
+                if (GetNextQueueItem() != null) {
                     sw.IsChecked = true;
                     IsQueueing = true;
                     await MessageWindow.Show(this, "Cannot disable Queue", "Your queue is not empty, and thus cannot be disabled");
-                }
-                else
-                {
+                } else {
                     IsQueueing = false;
                     await Dispatcher.UIThread.InvokeAsync(() => RaisePropertyChanged(IsQueueingProperty, true, false));
                 }
             }
         }
 
-        public void ProjectTabChanged(object sender, SelectionChangedEventArgs args)
-        {
-            if(args.AddedItems.Count == 1 && Projects.Contains(args.AddedItems[0]))
-            {
+        public void ProjectTabChanged(object sender, SelectionChangedEventArgs args) {
+            if (args.AddedItems.Count == 1 && Projects.Contains(args.AddedItems[0])) {
                 SwitchProject(args.AddedItems[0] as OpenBlenderProject);
             }
         }
@@ -1208,8 +1038,7 @@ namespace LogicReinc.BlendFarm.Windows
 
     }
 
-    public class RenderWindowOptions
-    {
+    public class RenderWindowOptions {
         public bool WithAssetSync { get; set; }
         public bool ConnectLocal { get; set; }
         public bool ImportSettings { get; set; }

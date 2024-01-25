@@ -9,12 +9,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Server
-{
+namespace LogicReinc.BlendFarm.Server {
     //Should clean this up.
     //Contains lots of test code
-    public class Program
-    {
+    public class Program {
         public const int VersionMajor = 1;
         public const int VersionMinor = 0;
         public const int VersionPatch = 5;
@@ -25,34 +23,27 @@ namespace LogicReinc.BlendFarm.Server
 
         private static ConsoleRedirector _redirector = null;
 
-        public static void StartIntercepting()
-        {
-            if(_redirector == null)
-            {
+        public static void StartIntercepting() {
+            if (_redirector == null) {
                 _redirector = new ConsoleRedirector(Console.Out);
                 _redirector.OnWrite += (output) => OnConsoleOutput?.Invoke(output);
                 Console.SetOut(_redirector);
             }
         }
 
-        static void Main(string[] args)
-        {
+        static void Main(string[] args) {
             StartIntercepting();
-            try
-            {
+            try {
                 //List IP addreses of this machine
                 string[] addresses = Dns.GetHostEntry(Dns.GetHostName()).AddressList
                     .Where(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Select(x => x?.ToString())
                     .ToArray();
                 Console.WriteLine("IP Addresses of this Server:");
-                for (int i = 0; i < addresses.Length; i++)
-                {
+                for (int i = 0; i < addresses.Length; i++) {
                     string address = addresses[i];
                     Console.WriteLine($"Host Address #{(i + 1)}: {address}");
                 }
-            }
-            catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine($"Failed to obtain host address due to [{ex.GetType().Name}]: {ex.Message}");
             }
             //List host port
@@ -79,51 +70,42 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Deletes the BlenderFiles directory, which is used for temporary file storage
         /// </summary>
-        public static void CleanupOldSessions()
-        {
-            try
-            {
+        public static void CleanupOldSessions() {
+            try {
                 string path = SystemInfo.RelativeToApplicationDirectory(ServerSettings.Instance.BlenderFiles);
                 if (Directory.Exists(path))
                     Directory.Delete(path, true);
-            }
-            catch { }
+            } catch { }
         }
 
 
 
-        
-        private class ConsoleRedirector : TextWriter
-        {
+
+        private class ConsoleRedirector : TextWriter {
             public override Encoding Encoding => Encoding.UTF8;
 
             private TextWriter _parent = null;
 
             public event Action<string> OnWrite;
 
-            public ConsoleRedirector(TextWriter parent)
-            {
+            public ConsoleRedirector(TextWriter parent) {
                 _parent = parent;
             }
 
-            public override void Write(string value)
-            {
+            public override void Write(string value) {
                 OnWrite?.Invoke(value);
                 _parent?.Write(value);
             }
-            public override void WriteLine(string value)
-            {
+            public override void WriteLine(string value) {
                 OnWrite?.Invoke(value);
                 _parent?.WriteLine(value);
             }
 
-            public override Task WriteAsync(string value)
-            {
+            public override Task WriteAsync(string value) {
                 OnWrite?.Invoke(value + "\n");
                 return _parent?.WriteAsync(value);
             }
-            public override Task WriteLineAsync(string value)
-            {
+            public override Task WriteLineAsync(string value) {
                 OnWrite?.Invoke(value + "\n");
                 return _parent?.WriteLineAsync(value);
             }

@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode
-{
+namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode {
     //Packets for rendering (batch)
 
     [BlendFarmHeader("renderBatch")]
-    public class RenderBatchRequest : BlendFarmMessage
-    {
+    public class RenderBatchRequest : BlendFarmMessage {
         public string TaskID { get; set; }
         public string SessionID { get; set; }
         public string Version { get; set; }
@@ -18,8 +16,7 @@ namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode
     }
 
     [BlendFarmHeader("renderBatchResp")]
-    public class RenderBatchResponse : BlendFarmMessage
-    {
+    public class RenderBatchResponse : BlendFarmMessage {
         public bool Success { get; set; }
         public string Message { get; set; }
         public string TaskID { get; set; }
@@ -27,8 +24,7 @@ namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode
     }
 
     [BlendFarmHeader("renderBatchResult")]
-    public class RenderBatchResult : BlendFarmMessage
-    {
+    public class RenderBatchResult : BlendFarmMessage {
         public bool Success { get; set; }
         public string TaskID { get; set; }
         public byte[] Data { get; set; }

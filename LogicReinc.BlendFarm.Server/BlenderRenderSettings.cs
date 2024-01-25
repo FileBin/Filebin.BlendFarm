@@ -3,13 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Server
-{
+namespace LogicReinc.BlendFarm.Server {
     /// <summary>
     /// Model used to pass to the python script
     /// </summary>
-    public class BlenderRenderSettings
-    {
+    public class BlenderRenderSettings {
         /// <summary>
         /// Identification of a subtask
         /// </summary>
@@ -120,10 +118,8 @@ namespace LogicReinc.BlendFarm.Server
         /// Converts a RenderSettings received from Client to the internal class
         /// Merge?
         /// </summary>
-        public static BlenderRenderSettings FromRenderSettings(RenderPacketModel settings)
-        {
-            var result = new BlenderRenderSettings()
-            {
+        public static BlenderRenderSettings FromRenderSettings(RenderPacketModel settings) {
+            var result = new BlenderRenderSettings() {
                 TaskID = (!string.IsNullOrEmpty(settings.TaskID)) ? settings.TaskID : Guid.NewGuid().ToString(),
                 X = settings.X,
                 X2 = settings.X2,

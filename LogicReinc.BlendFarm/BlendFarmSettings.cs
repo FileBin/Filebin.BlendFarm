@@ -9,10 +9,8 @@ using System.Text.Json;
 using static LogicReinc.BlendFarm.BlendFarmSettings;
 using static LogicReinc.BlendFarm.Windows.RenderWindow;
 
-namespace LogicReinc.BlendFarm
-{
-    public class BlendFarmSettings
-    {
+namespace LogicReinc.BlendFarm {
+    public class BlendFarmSettings {
         private static string FILE_NAME = "ClientSettings";
 
 
@@ -53,16 +51,14 @@ namespace LogicReinc.BlendFarm
         public bool Option_ImportSettings { get; set; }
 
 
-        public void ApplyProjectSettings(string fileName, UIProjectSettings settings)
-        {
+        public void ApplyProjectSettings(string fileName, UIProjectSettings settings) {
             if (ProjectSettings.ContainsKey(fileName))
                 ProjectSettings[fileName] = settings;
             else
                 ProjectSettings.Add(fileName, settings);
             Save();
         }
-        public UIProjectSettings GetProjectSettings(string file)
-        {
+        public UIProjectSettings GetProjectSettings(string file) {
             if (ProjectSettings.ContainsKey(file))
                 return ProjectSettings[file];
             return null;
@@ -72,22 +68,18 @@ namespace LogicReinc.BlendFarm
         #region Boilerplate
 
         private static BlendFarmSettings _instance = null;
-        public static BlendFarmSettings Instance
-        {
-            get
-            {
+        public static BlendFarmSettings Instance {
+            get {
                 if (_instance == null)
                     _instance = Load();
                 return _instance;
             }
         }
 
-        public void Save()
-        {
+        public void Save() {
             File.WriteAllText(SystemInfo.RelativeToApplicationDirectory(FILE_NAME), JsonSerializer.Serialize(this));
         }
-        public static BlendFarmSettings Load()
-        {
+        public static BlendFarmSettings Load() {
             string path = SystemInfo.RelativeToApplicationDirectory(FILE_NAME);
             if (File.Exists(path))
                 return JsonSerializer.Deserialize<BlendFarmSettings>(File.ReadAllText(path));
@@ -97,8 +89,7 @@ namespace LogicReinc.BlendFarm
         #endregion
 
 
-        public class HistoryClient
-        {
+        public class HistoryClient {
             public string Name { get; set; }
             public string Address { get; set; }
 
@@ -110,8 +101,7 @@ namespace LogicReinc.BlendFarm
         /// <summary>
         /// Used to keep track of previously used blend files
         /// </summary>
-        public class HistoryEntry
-        {
+        public class HistoryEntry {
             public string Name { get; set; }
             public string Path { get; set; }
             public DateTime Date { get; set; }
@@ -119,8 +109,7 @@ namespace LogicReinc.BlendFarm
 
 
 
-        public class UIProjectSettings
-        {
+        public class UIProjectSettings {
             public bool UseNetworked { get; set; }
             public string NetworkPathWindows { get; set; }
             public string NetworkPathLinux { get; set; }

@@ -12,10 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Objects
-{
-    public class QueueItem : INotifyPropertyChanged
-    {
+namespace LogicReinc.BlendFarm.Objects {
+    public class QueueItem : INotifyPropertyChanged {
         private RenderWindow _owner = null;
 
         public string ID { get; set; }
@@ -48,8 +46,7 @@ namespace LogicReinc.BlendFarm.Objects
 
         public System.Drawing.Image LastImage { get; set; }
 
-        public QueueItem(RenderWindow owner, OpenBlenderProject proj, RenderManagerSettings settings, string saveTo = null, int frames = 1)
-        {
+        public QueueItem(RenderWindow owner, OpenBlenderProject proj, RenderManagerSettings settings, string saveTo = null, int frames = 1) {
             _owner = owner;
             Frames = frames;
             Project = proj;
@@ -59,36 +56,28 @@ namespace LogicReinc.BlendFarm.Objects
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public async Task UpdateValues(RenderWindow window, BlendFarmManager manager, RenderManagerSettings settings)
-        {
+        public async Task UpdateValues(RenderWindow window, BlendFarmManager manager, RenderManagerSettings settings) {
             Settings = settings;
 
-            if (Task.Consumed && !Completed)
-            {
+            if (Task.Consumed && !Completed) {
                 await Task.Cancel();
                 await Execute(window, manager);
             }
         }
 
-        public async Task Execute(RenderWindow window, BlendFarmManager manager)
-        {
-            try
-            {
-                if (Frames <= 1)
-                {
+        public async Task Execute(RenderWindow window, BlendFarmManager manager) {
+            try {
+                if (Frames <= 1) {
                     //Normal Render
-                    Task = manager.GetImageTask(Project.BlendFile, Settings, (st, bitmap) =>
-                    {
+                    Task = manager.GetImageTask(Project.BlendFile, Settings, (st, bitmap) => {
                         //Apply image to canvas
-                        Dispatcher.UIThread.InvokeAsync(() =>
-                        {
+                        Dispatcher.UIThread.InvokeAsync(() => {
                             Project.LastImage = bitmap.ToAvaloniaBitmap();
                             window.RefreshCurrentProject();
                             RefreshInfo();
                         });
                     });
-                    Task.OnProgress += (t, p) =>
-                    {
+                    Task.OnProgress += (t, p) => {
                         if (p >= 1)
                             FinishedAllFrames = true;
                         RefreshInfo();
@@ -115,45 +104,35 @@ namespace LogicReinc.BlendFarm.Objects
                         final.Save(SaveTo);
 
                     //Apply final to canvas
-                    Dispatcher.UIThread.InvokeAsync(() =>
-                    {
+                    Dispatcher.UIThread.InvokeAsync(() => {
                         Project.LastImage = final.ToAvaloniaBitmap();
 
                         Project.SetRenderTask(null);
                         RefreshInfo();
                     });
                     window.RefreshCurrentProject();
-                }
-                else
-                {
+                } else {
                     //Animation
                     if (string.IsNullOrEmpty(FrameFormat))
                         throw new ArgumentException("Missing frameformat for animation");
 
                     //Normal Render
-                    Task = manager.GetAnimationTask(Project.BlendFile, Settings.Frame, Settings.Frame + Frames, Settings, async (task, frame) =>
-                    {
+                    Task = manager.GetAnimationTask(Project.BlendFile, Settings.Frame, Settings.Frame + Frames, Settings, async (task, frame) => {
 
                         string filePath = Path.Combine(SaveTo, FrameFormat.Replace("#", task.Frame.ToString()));
 
-                        try
-                        {
+                        try {
                             File.WriteAllBytes(filePath, frame.Image);
-                        }
-                        catch (Exception ex)
-                        {
+                        } catch (Exception ex) {
                             MessageWindow.Show(_owner, "Frame Save Error", $"Animation frame {task.Frame} failed to save due to:" + ex.Message);
                             return;
                         }
 
-                        using (System.Drawing.Image image = ImageConverter.Convert(frame.Image, task.Parent.Settings.RenderFormat))
-                        {
-                            if (image != null)
-                            {
+                        using (var image = ImageConverter.Convert(frame.Image, task.Parent.Settings.RenderFormat)) {
+                            if (image != null) {
                                 Project.LastImage = image.ToAvaloniaBitmap();
                                 LastImage = image;
-                            }
-                            else
+                            } else
                                 Project.LastImage = Statics.NoPreviewImage;
                         }
 
@@ -163,8 +142,7 @@ namespace LogicReinc.BlendFarm.Objects
                         RefreshInfo();
                         window.RefreshCurrentProject();
                     });
-                    Task.OnProgress += (t, p) =>
-                    {
+                    Task.OnProgress += (t, p) => {
                         if (p >= 1)
                             FinishedAllFrames = true;
                         RefreshInfo();
@@ -173,8 +151,8 @@ namespace LogicReinc.BlendFarm.Objects
                     RefreshInfo();
 
                     Task.FileID = manager.UpdateFileVersion(Project.BlendFile, Project.UseNetworkedPath);
-                    
-                    if(!Project.UseNetworkedPath)
+
+                    if (!Project.UseNetworkedPath)
                         await manager.Sync(Project.BlendFile, window.UseSyncCompression);
                     else
                         await manager.Sync(Project.BlendFile, Project.NetworkPathWindows, Project.NetworkPathLinux, Project.NetworkPathMacOS);
@@ -189,9 +167,7 @@ namespace LogicReinc.BlendFarm.Objects
                     RefreshInfo();
                     window.RefreshCurrentProject();
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 if (!Task.Consumed)
                     Task.Cancel();
                 Exception = ex.Message;
@@ -202,10 +178,8 @@ namespace LogicReinc.BlendFarm.Objects
             }
         }
 
-        public void RefreshInfo()
-        {
-            Dispatcher.UIThread.InvokeAsync(() =>
-            {
+        public void RefreshInfo() {
+            Dispatcher.UIThread.InvokeAsync(() => {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(State)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Active)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Progress)));
@@ -219,33 +193,26 @@ namespace LogicReinc.BlendFarm.Objects
         }
 
 
-        public async Task CancelQueueItem()
-        {
+        public async Task CancelQueueItem() {
             Cancelled = true;
             if (Task != null && Task.Consumed)
                 await Task.Cancel();
 
             RefreshInfo();
         }
-        public async Task OpenQueueItem()
-        {
-            try
-            {
-                if (Completed)
-                {
+        public async Task OpenQueueItem() {
+            try {
+                if (Completed) {
                     if (!string.IsNullOrEmpty(SaveTo))
                         BitmapViewer.Show(_owner, Project.BlendFile, LastImage.ToAvaloniaBitmap());
                     else
                         BitmapViewer.Show(_owner, Project.BlendFile, LastImage.ToAvaloniaBitmap());
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 string msg = ex.Message;
             }
         }
-        public async Task DeleteQueueItem()
-        {
+        public async Task DeleteQueueItem() {
             _owner.RemoveQueueItem(this);
         }
     }

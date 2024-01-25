@@ -15,14 +15,12 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Server
-{
+namespace LogicReinc.BlendFarm.Server {
     /// <summary>
     /// A connected client
     /// Incoming messages are automatically routed to methods with the BlendFarmHeader attributes
     /// </summary>
-    public class RenderServerClientTcp : TcpRenderClient
-    {
+    public class RenderServerClientTcp : TcpRenderClient {
         private const int UPDATE_TIMING_MS = 300;
 
         private static Dictionary<string, int> _failedAuthIps = new Dictionary<string, int>();
@@ -43,40 +41,33 @@ namespace LogicReinc.BlendFarm.Server
         /// </summary>
         public event Action<RenderServerClientTcp> OnDisconnect;
 
-        public RenderServerClientTcp(BlenderManager manager, TcpClient client) : base(client)
-        {
+        public RenderServerClientTcp(BlenderManager manager, TcpClient client) : base(client) {
             _blender = manager;
             IsAuthenticated = string.IsNullOrEmpty(ServerSettings.Instance.BasicSecurityPassword);
         }
 
-        private void HandleConsoleOutput(string text)
-        {
-            Task.Run(() =>
-            {
-                SendPacket(new ConsoleActivityResponse()
-                {
+        private void HandleConsoleOutput(string text) {
+            Task.Run(() => {
+                SendPacket(new ConsoleActivityResponse() {
                     Output = text
                 });
             });
         }
 
 
-        protected override void HandleDisconnected()
-        {
+        protected override void HandleDisconnected() {
             if (_isInterceptingConsole)
                 Program.OnConsoleOutput -= HandleConsoleOutput;
             //SessionData.CleanUp(sessions.ToArray());
             _ = SessionData.CleanUpDelayed(10000, sessions.ToArray());
             OnDisconnect?.Invoke(this);
-            if (_isRendering)
-            {
+            if (_isRendering) {
                 _blender.Cancel();
                 _isRendering = false;
             }
         }
 
-        private void EnsureAuthenticated()
-        {
+        private void EnsureAuthenticated() {
             if (!IsAuthenticated)
                 throw new ClientStateException("Not authenticated");
         }
@@ -84,10 +75,8 @@ namespace LogicReinc.BlendFarm.Server
         #region Handlers
 
         [BlendFarmHeader("checkProtocol")]
-        public CheckProtocolResponse Packet_CheckProtocol(CheckProtocolRequest req)
-        {
-            return new CheckProtocolResponse()
-            {
+        public CheckProtocolResponse Packet_CheckProtocol(CheckProtocolRequest req) {
+            return new CheckProtocolResponse() {
                 ClientVersionMajor = Program.VersionMajor,
                 ClientVersionMinor = Program.VersionMinor,
                 ClientVersionPatch = Program.VersionPatch,
@@ -97,14 +86,12 @@ namespace LogicReinc.BlendFarm.Server
         }
 
         [BlendFarmHeader("auth")]
-        public AuthResponse Packet_Auth(AuthRequest req)
-        {
+        public AuthResponse Packet_Auth(AuthRequest req) {
             if (req.Pass != ServerSettings.Instance.BasicSecurityPassword)
                 throw new ClientStateException("Wrong password");
             IsAuthenticated = true;
 
-            return new AuthResponse()
-            {
+            return new AuthResponse() {
                 IsAuthenticated = true
             };
         }
@@ -113,11 +100,9 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler computerInfo, returns computer info
         /// </summary>
         [BlendFarmHeader("computerInfo")]
-        public ComputerInfoResponse Packet_ComputerInfo(ComputerInfoRequest req)
-        {
+        public ComputerInfoResponse Packet_ComputerInfo(ComputerInfoRequest req) {
             EnsureAuthenticated();
-            return new ComputerInfoResponse()
-            {
+            return new ComputerInfoResponse() {
                 Cores = Environment.ProcessorCount,
                 Name = Environment.MachineName,
                 OS = SystemInfo.GetOSName()
@@ -128,11 +113,9 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler isVersionAvailable, returns if a specified Blender versions is available
         /// </summary>
         [BlendFarmHeader("isVersionAvailable")]
-        public IsVersionAvailableResponse Packet_Available(IsVersionAvailableRequest req)
-        {
+        public IsVersionAvailableResponse Packet_Available(IsVersionAvailableRequest req) {
             EnsureAuthenticated();
-            return new IsVersionAvailableResponse()
-            {
+            return new IsVersionAvailableResponse() {
                 Success = _blender.IsVersionAvailable(req.Version)
             };
         }
@@ -141,8 +124,7 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler isVersionAvailable, returns if a specified Blender versions is available
         /// </summary>
         [BlendFarmHeader("consoleActivityRequest")]
-        public void Packet_ConsoleActivity(ConsoleActivityRequest req)
-        {
+        public void Packet_ConsoleActivity(ConsoleActivityRequest req) {
             EnsureAuthenticated();
             if (_isInterceptingConsole)
                 return;
@@ -155,32 +137,25 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler checkSync, returns if file is synced by FileID
         /// </summary>
         [BlendFarmHeader("checkSync")]
-        public CheckSyncResponse Packet_CheckSync(CheckSyncRequest req)
-        {
+        public CheckSyncResponse Packet_CheckSync(CheckSyncRequest req) {
             EnsureAuthenticated();
             SessionData session = SessionData.GetOrCreate(req.SessionID);
             session.InUse = true;
-            return new CheckSyncResponse()
-            {
+            return new CheckSyncResponse() {
                 Success = session.FileID == req.FileID
             };
         }
 
         [BlendFarmHeader("recover")]
-        public RecoverResponse Packet_Recover(RecoverRequest req)
-        {
+        public RecoverResponse Packet_Recover(RecoverRequest req) {
             EnsureAuthenticated();
-            if (req.SessionIDs != null)
-            {
+            if (req.SessionIDs != null) {
                 List<SessionData> datas = new List<SessionData>();
-                try
-                {
-                    foreach (string ses in req.SessionIDs)
-                    {
+                try {
+                    foreach (string ses in req.SessionIDs) {
                         SessionData sesData = SessionData.Get(ses);
                         if (sesData == null)
-                            return new RecoverResponse()
-                            {
+                            return new RecoverResponse() {
                                 Success = false,
                                 Message = $"Failed to recover [{ses}], Session no longer exists..",
                                 SessionIDs = req.SessionIDs
@@ -188,32 +163,26 @@ namespace LogicReinc.BlendFarm.Server
                         sesData.InUse = true;
                         datas.Add(sesData);
                     }
-                }
-                catch(Exception ex)
-                {
+                } catch (Exception ex) {
                     SessionData.CleanUpDelayed(10000, datas.Select(x => x.SessionID).ToArray());
                 }
 
-                foreach(SessionData data in datas)
-                {
+                foreach (SessionData data in datas) {
                     if (!sessions.Contains(data.SessionID))
                         sessions.Add(data.SessionID);
                 }
             }
 
-            return new RecoverResponse()
-            {
+            return new RecoverResponse() {
                 Success = true,
                 SessionIDs = req.SessionIDs
             };
         }
 
         [BlendFarmHeader("syncNetwork")]
-        public SyncResponse Packet_SyncNetwork(SyncNetworkRequest req)
-        {
+        public SyncResponse Packet_SyncNetwork(SyncNetworkRequest req) {
             EnsureAuthenticated();
-            try
-            {
+            try {
                 if (!sessions.Contains(req.SessionID))
                     sessions.Add(req.SessionID);
 
@@ -221,13 +190,11 @@ namespace LogicReinc.BlendFarm.Server
                 session.InUse = true;
 
                 string uploadID = Guid.NewGuid().ToString();
-                if (req.FileID != session.FileID)
-                {
+                if (req.FileID != session.FileID) {
                     session.UpdatingFile();
 
                     string path = null;
-                    switch (SystemInfo.GetOSName())
-                    {
+                    switch (SystemInfo.GetOSName()) {
                         case SystemInfo.OS_WINDOWS64:
                             path = req.WindowsPath;
                             break;
@@ -249,17 +216,13 @@ namespace LogicReinc.BlendFarm.Server
                     session.UpdatedFile(req.FileID);
                 }
 
-                return new SyncResponse()
-                {
+                return new SyncResponse() {
                     Success = true,
                     SameFile = req.FileID == session.FileID,
                     UploadID = uploadID
                 };
-            }
-            catch (Exception ex)
-            {
-                return new SyncResponse()
-                {
+            } catch (Exception ex) {
+                return new SyncResponse() {
                     Success = false,
                     Message = "Failed due to exception:" + ex.Message
                 };
@@ -269,11 +232,9 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler sync, Starts a Sync process, registering a file upload
         /// </summary>
         [BlendFarmHeader("sync")]
-        public SyncResponse Packet_Sync(SyncRequest req)
-        {
+        public SyncResponse Packet_Sync(SyncRequest req) {
             EnsureAuthenticated();
-            try
-            {
+            try {
                 if (!sessions.Contains(req.SessionID))
                     sessions.Add(req.SessionID);
 
@@ -281,25 +242,20 @@ namespace LogicReinc.BlendFarm.Server
                 session.InUse = true;
 
                 string uploadID = Guid.NewGuid().ToString();
-                if (req.FileID != session.FileID)
-                {
+                if (req.FileID != session.FileID) {
                     Directory.CreateDirectory(SystemInfo.RelativeToApplicationDirectory(ServerSettings.Instance.BlenderFiles));
                     _uploads.Add(uploadID, new FileUpload(session.GetBlendFilePath(), req, req.Compression));
                     session.UpdatingFile();
                     session.IsNetworked = false;
                 }
 
-                return new SyncResponse()
-                {
+                return new SyncResponse() {
                     Success = true,
                     SameFile = req.FileID == session.FileID,
                     UploadID = uploadID
                 };
-            }
-            catch(Exception ex)
-            {
-                return new SyncResponse()
-                {
+            } catch (Exception ex) {
+                return new SyncResponse() {
                     Success = false,
                     Message = "Failed due to exception:" + ex.Message
                 };
@@ -309,15 +265,12 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler syncUpload, Process chunk of Blendfile
         /// </summary>
         [BlendFarmHeader("syncUpload")]
-        public SyncUploadResponse Packet_SyncUpload(SyncUploadRequest req)
-        {
+        public SyncUploadResponse Packet_SyncUpload(SyncUploadRequest req) {
             EnsureAuthenticated();
-            try
-            {
+            try {
                 FileUpload upload = _uploads.ContainsKey(req.UploadID) ? _uploads[req.UploadID] : null;
                 if (upload == null)
-                    return new SyncUploadResponse()
-                    {
+                    return new SyncUploadResponse() {
                         Success = false,
                         Message = "Upload does not exist"
                     };
@@ -334,21 +287,16 @@ namespace LogicReinc.BlendFarm.Server
                     };
                 }*/
 
-                lock (upload)
-                {
+                lock (upload) {
                     //upload.WriteBase64(req.Data);
                     upload.Write(req.Data, 0, req.Data.Length);
 
-                    return new SyncUploadResponse()
-                    {
+                    return new SyncUploadResponse() {
                         Success = true
                     };
                 }
-            }
-            catch(Exception ex)
-            {
-                return new SyncUploadResponse()
-                {
+            } catch (Exception ex) {
+                return new SyncUploadResponse() {
                     Success = false,
                     Message = "Failed due to exception:" + ex.Message
                 };
@@ -359,20 +307,16 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler syncComplete, Finalize Sync process
         /// </summary>
         [BlendFarmHeader("syncComplete")]
-        public SyncCompleteResponse Packet_Complete(SyncCompleteRequest complete)
-        {
+        public SyncCompleteResponse Packet_Complete(SyncCompleteRequest complete) {
             EnsureAuthenticated();
-            try
-            {
+            try {
                 FileUpload upload = _uploads.ContainsKey(complete.UploadID) ? _uploads[complete.UploadID] : null;
                 if (upload == null)
-                    return new SyncCompleteResponse()
-                    {
+                    return new SyncCompleteResponse() {
                         Success = false
                     };
                 _uploads.Remove(complete.UploadID);
-                lock (upload)
-                {
+                lock (upload) {
 
                     upload.FinalWrite();
 
@@ -385,16 +329,12 @@ namespace LogicReinc.BlendFarm.Server
 
                     session.UpdatedFile(obj.FileID);
 
-                    return new SyncCompleteResponse()
-                    {
+                    return new SyncCompleteResponse() {
                         Success = true
                     };
                 }
-            }
-            catch (Exception ex)
-            {
-                return new SyncCompleteResponse()
-                {
+            } catch (Exception ex) {
+                return new SyncCompleteResponse() {
                     Success = false,
                     Message = "Failed due to exception:" + ex.Message
                 };
@@ -405,11 +345,9 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler isBusy, Checks if RenderNode is busy
         /// </summary>
         [BlendFarmHeader("isBusy")]
-        public IsBusyResponse Packet_IsBusy(IsBusyRequest req)
-        {
+        public IsBusyResponse Packet_IsBusy(IsBusyRequest req) {
             EnsureAuthenticated();
-            return new IsBusyResponse()
-            {
+            return new IsBusyResponse() {
                 IsBusy = _blender.Busy
             };
         }
@@ -418,58 +356,46 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler prepare, Prepare a specific Blender version
         /// </summary>
         [BlendFarmHeader("prepare")]
-        public PrepareResponse Packet_Prepare(PrepareRequest req)
-        {
+        public PrepareResponse Packet_Prepare(PrepareRequest req) {
             EnsureAuthenticated();
-            if (!_blender.TryPrepare(req.Version, (activity, progress) =>
-            {
-                SendPacket(new ActivityRequest()
-                {
+            if (!_blender.TryPrepare(req.Version, (activity, progress) => {
+                SendPacket(new ActivityRequest() {
                     Activity = $"{activity}{((progress > 0) ? $" {Math.Floor(progress * 100).ToString()}%" : "")} [{req.Version}]",
                     Progress = (progress > 0) ? progress * 100 : -1
                 });
             }))
-                return new PrepareResponse()
-                {
+                return new PrepareResponse() {
                     Message = $"Failed to prepare version {req.Version}",
                     Success = false
                 };
 
-            return new PrepareResponse()
-            {
+            return new PrepareResponse() {
                 Success = true
             };
         }
 
         [BlendFarmHeader("peek")]
-        public BlenderPeekResponse Packet_Peek(BlenderPeekRequest req)
-        {
+        public BlenderPeekResponse Packet_Peek(BlenderPeekRequest req) {
             EnsureAuthenticated();
             if (!_blender.IsVersionAvailable(req.Version))
-                return new BlenderPeekResponse()
-                {
+                return new BlenderPeekResponse() {
                     Success = false,
                     Message = "Version not prepared.."
                 };
 
-            try
-            {
+            try {
                 _isRendering = true;
                 //Validate Settings
                 string filePath = SessionData.GetFilePath(req.SessionID);
                 if (filePath == null)
-                    return new BlenderPeekResponse()
-                    {
+                    return new BlenderPeekResponse() {
                         Success = false,
                         Message = "Blend file was not available"
                     };
 
                 return _blender.Peek(req.Version, filePath, req.FileID);
-            }
-            catch (Exception ex)
-            {
-                return new BlenderPeekResponse()
-                {
+            } catch (Exception ex) {
+                return new BlenderPeekResponse() {
                     Success = false,
                     Message = "Exception:" + ex.Message
                 };
@@ -480,32 +406,27 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler renderBatch, render multiple requests using a single Blender instance
         /// </summary>
         [BlendFarmHeader("renderBatch")]
-        public RenderBatchResponse Packet_RenderBatch(RenderBatchRequest req)
-        {
+        public RenderBatchResponse Packet_RenderBatch(RenderBatchRequest req) {
             EnsureAuthenticated();
             if (!_blender.IsVersionAvailable(req.Version))
-                return new RenderBatchResponse()
-                {
+                return new RenderBatchResponse() {
                     TaskID = req.TaskID,
                     Success = false,
                     Message = "Version not prepared.."
                 };
 
-            try
-            {
+            try {
                 _isRendering = true;
                 //Validate Settings
                 string filePath = SessionData.GetFilePath(req.SessionID);
                 if (filePath == null)
-                    return new RenderBatchResponse()
-                    {
+                    return new RenderBatchResponse() {
                         TaskID = req.TaskID,
                         Success = false,
                         Message = "Blend file was not available"
                     };
 
-                for (int i = 0; i < req.Settings.Count; i++)
-                {
+                for (int i = 0; i < req.Settings.Count; i++) {
                     Shared.RenderPacketModel settings = req.Settings[i];
 
                     if (settings == null)
@@ -523,13 +444,10 @@ namespace LogicReinc.BlendFarm.Server
                 List<string> exceptions = new List<string>();
 
                 //Render
-                Action<BlenderProcess.Status> onStatus = (status) =>
-                {
-                    if (DateTime.Now.Subtract(lastUpdate).TotalMilliseconds > UPDATE_TIMING_MS)
-                    {
+                Action<BlenderProcess.Status> onStatus = (status) => {
+                    if (DateTime.Now.Subtract(lastUpdate).TotalMilliseconds > UPDATE_TIMING_MS) {
                         lastUpdate = DateTime.Now;
-                        SendPacket(new RenderInfoResponse()
-                        {
+                        SendPacket(new RenderInfoResponse() {
                             TaskID = req.TaskID,
                             TilesFinished = status.TilesFinish,
                             TilesTotal = status.TilesTotal,
@@ -538,15 +456,12 @@ namespace LogicReinc.BlendFarm.Server
                         });
                     }
                 };
-                Action<string> onCompletion = (taskID) =>
-                {
+                Action<string> onCompletion = (taskID) => {
                     BlenderRenderSettings settings = batch.FirstOrDefault(x => x.TaskID == taskID);
-                    if (settings != null)
-                    {
+                    if (settings != null) {
                         string output = BlenderManager.FindOutput(settings.Output);
 
-                        SendPacket(new RenderBatchResult()
-                        {
+                        SendPacket(new RenderBatchResult() {
                             Data = File.ReadAllBytes(output),
                             Success = true,
                             TaskID = settings.TaskID
@@ -557,75 +472,58 @@ namespace LogicReinc.BlendFarm.Server
 
                 List<string> files = _blender.RenderBatch(req.Version, filePath, batch,
                     req.FileID,
-                    (process) =>
-                    {
+                    (process) => {
                         process.OnBlenderStatus += onStatus;
                         process.OnBlenderCompleteTask += onCompletion;
                         process.OnBlenderException += onException;
                     },
-                    (process)=>
-                    {
+                    (process) => {
                         process.OnBlenderStatus -= onStatus;
                         process.OnBlenderCompleteTask -= onCompletion;
                         process.OnBlenderException -= onException;
                     });
 
                 //Handle Result
-                if (files  == null || files.Count != req.Settings.Count)
-                {
+                if (files == null || files.Count != req.Settings.Count) {
                     if (exceptions.Count == 0)
-                        return new RenderBatchResponse()
-                        {
+                        return new RenderBatchResponse() {
                             TaskID = req.TaskID,
                             Success = false,
                             Message = "Missing Files?"
                         };
                     else
-                        return new RenderBatchResponse()
-                        {
+                        return new RenderBatchResponse() {
                             TaskID = req.TaskID,
                             Success = false,
                             Message = string.Join(", ", exceptions)
                         };
-                }
-                else
-                {
+                } else {
                     //Cleanup
                     //string data = Convert.ToBase64String(File.ReadAllBytes(file));
                     foreach (string file in files)
                         File.Delete(file);
-                    if (exceptions.Count > 0)
-                    {
-                        return new RenderBatchResponse()
-                        {
+                    if (exceptions.Count > 0) {
+                        return new RenderBatchResponse() {
                             Success = false,
                             TaskID = req.TaskID,
                             SubTaskIDs = req.Settings.Select(X => X.TaskID).ToList(),
                             Message = string.Join(", ", exceptions)
                         };
-                    }
-                    else
-                    {
-                        return new RenderBatchResponse()
-                        {
+                    } else {
+                        return new RenderBatchResponse() {
                             Success = true,
                             TaskID = req.TaskID,
                             SubTaskIDs = req.Settings.Select(X => X.TaskID).ToList()
                         };
                     }
                 };
-            }
-            catch (Exception ex)
-            {
-                return new RenderBatchResponse()
-                {
+            } catch (Exception ex) {
+                return new RenderBatchResponse() {
                     TaskID = req.TaskID,
                     Success = false,
                     Message = "Exception:" + ex.Message
                 };
-            }
-            finally
-            {
+            } finally {
                 _isRendering = false;
             }
         }
@@ -634,25 +532,21 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler render, Render a single request
         /// </summary>
         [BlendFarmHeader("render")]
-        public RenderResponse Packet_Render(RenderRequest req)
-        {
+        public RenderResponse Packet_Render(RenderRequest req) {
             EnsureAuthenticated();
             if (!_blender.IsVersionAvailable(req.Version))
-                return new RenderResponse()
-                {
+                return new RenderResponse() {
                     TaskID = req.TaskID,
                     Success = false,
                     Message = "Version not prepared.."
                 };
 
-            try
-            {
+            try {
                 _isRendering = true;
                 //Validate Settings
                 string filePath = SessionData.GetFilePath(req.SessionID);
                 if (filePath == null)
-                    return new RenderResponse()
-                    {
+                    return new RenderResponse() {
                         TaskID = req.TaskID,
                         Success = false,
                         Message = "Blend file was not available"
@@ -670,13 +564,10 @@ namespace LogicReinc.BlendFarm.Server
                 List<string> exceptions = new List<string>();
 
                 //Render
-                Action<BlenderProcess.Status> onStatus = (status) =>
-                {
-                    if (DateTime.Now.Subtract(lastUpdate).TotalMilliseconds > UPDATE_TIMING_MS)
-                    {
+                Action<BlenderProcess.Status> onStatus = (status) => {
+                    if (DateTime.Now.Subtract(lastUpdate).TotalMilliseconds > UPDATE_TIMING_MS) {
                         lastUpdate = DateTime.Now;
-                        SendPacket(new RenderInfoResponse()
-                        {
+                        SendPacket(new RenderInfoResponse() {
                             TaskID = req.TaskID,
                             TilesFinished = status.TilesFinish,
                             TilesTotal = status.TilesTotal,
@@ -686,63 +577,50 @@ namespace LogicReinc.BlendFarm.Server
                     }
                 };
                 Action<string> onException = (excp) => exceptions.Add(excp);
-                string file = _blender.Render(req.Version, filePath, 
-                    BlenderRenderSettings.FromRenderSettings(req.Settings), 
+                string file = _blender.Render(req.Version, filePath,
+                    BlenderRenderSettings.FromRenderSettings(req.Settings),
                     req.FileID,
-                    (process)=>
-                    {
+                    (process) => {
                         process.OnBlenderStatus += onStatus;
                         process.OnBlenderException += onException;
                     },
-                    (process)=>
-                    {
+                    (process) => {
                         process.OnBlenderStatus -= onStatus;
                         process.OnBlenderException -= onException;
                     });
 
                 //Handle Result
-                if (file == null || !File.Exists(file))
-                {
+                if (file == null || !File.Exists(file)) {
 
                     if (exceptions.Count == 0)
-                        return new RenderResponse()
-                        {
+                        return new RenderResponse() {
                             TaskID = req.TaskID,
                             Success = false,
                             Message = "Missing Files?"
                         };
                     else
-                        return new RenderResponse()
-                        {
+                        return new RenderResponse() {
                             TaskID = req.TaskID,
                             Success = false,
                             Message = string.Join(", ", exceptions)
                         };
-                }
-                else
-                {
+                } else {
                     byte[] data = File.ReadAllBytes(file);
 
                     File.Delete(file);
-                    return new RenderResponse()
-                    {
+                    return new RenderResponse() {
                         Success = true,
                         TaskID = req.TaskID,
                         Data = data
                     };
                 };
-            }
-            catch(Exception ex)
-            {
-                return new RenderResponse()
-                {
+            } catch (Exception ex) {
+                return new RenderResponse() {
                     TaskID = req.TaskID,
                     Success = false,
                     Message = "Exception:" + ex.Message
                 };
-            }
-            finally
-            {
+            } finally {
                 _isRendering = false;
             }
         }
@@ -751,8 +629,7 @@ namespace LogicReinc.BlendFarm.Server
         /// Handler cancelRender, Cancels an ongoing render
         /// </summary>
         [BlendFarmHeader("cancelRender")]
-        public void Packet_Cancel_Render(CancelRenderRequest req)
-        {
+        public void Packet_Cancel_Render(CancelRenderRequest req) {
             EnsureAuthenticated();
             _blender.Cancel();
             _isRendering = false;

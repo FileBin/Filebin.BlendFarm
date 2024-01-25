@@ -10,73 +10,57 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Client.Tasks
-{
-    public class SplittedTask : RenderTask, IImageTask
-    {
+namespace LogicReinc.BlendFarm.Client.Tasks {
+    public class SplittedTask : RenderTask, IImageTask {
         private bool _isVertical;
 
 
         public Image FinalImage { get; private set; }
 
 
-        public SplittedTask(List<RenderNode> nodes, string session, string version, long fileId, RenderManagerSettings settings = null, bool vertical = false) : base(nodes, session, version, fileId, settings)
-        {
+        public SplittedTask(List<RenderNode> nodes, string session, string version, long fileId, RenderManagerSettings settings = null, bool vertical = false) : base(nodes, session, version, fileId, settings) {
             _isVertical = vertical;
         }
 
-        protected override async Task<bool> Execute()
-        {
+        protected override async Task<bool> Execute() {
             object drawLock = new object();
             Bitmap result = new Bitmap(Settings.OutputWidth, Settings.OutputHeight);
             Graphics g = Graphics.FromImage(result);
-            try
-            {
+            try {
                 Dictionary<RenderNode, RenderSubTask> assignment = GetSplitSubTasks(_usedNodes, _isVertical);
 
                 int finished = 0;
                 List<string> exceptions = new List<string>();
-                await Task.Run(() =>
-                {
-                    ForceParallel(_usedNodes, (node) =>
-                    {
+                await Task.Run(() => {
+                    ForceParallel(_usedNodes, (node) => {
                         RenderSubTask task = assignment[node];
                         if (task == null)
                             return;
 
                         string lastException = null;
                         bool rendered = false;
-                        for (int i = 0; i < 3; i++)
-                        {
+                        for (int i = 0; i < 3; i++) {
                             if (Cancelled)
                                 return;
 
                             SubTaskResult taskPart = null;
-                            try
-                            {
+                            try {
                                 taskPart = ExecuteSubTask(node, task);
-                            }
-                            catch (TaskCanceledException ex)
-                            {
+                            } catch (TaskCanceledException ex) {
                                 if (Cancelled)
                                     return;
-                            }
-                            catch(RecoverException ex)
-                            {
+                            } catch (RecoverException ex) {
                                 node.UpdateException(ex.Message);
                                 exceptions.Add(ex.Message);
                                 lastException = ex.Message;
                                 return;
-                            }
-                            catch (Exception ex)
-                            {
+                            } catch (Exception ex) {
                                 node.UpdateException($"[{i + 1}/3] " + ex.Message);
                                 lastException = ex.Message;
                                 Thread.Sleep(1000);
                                 continue;
                             }
-                            if (taskPart.Exception != null)
-                            {
+                            if (taskPart.Exception != null) {
                                 node.UpdateException($"[{i + 1}/3] " + taskPart.Exception.Message);
                                 lastException = taskPart.Exception.Message;
                                 Thread.Sleep(1000);
@@ -101,9 +85,7 @@ namespace LogicReinc.BlendFarm.Client.Tasks
 
                     return result;
                 });
-            }
-            finally
-            {
+            } finally {
                 if (g != null)
                     g.Dispose();
             }
@@ -119,14 +101,12 @@ namespace LogicReinc.BlendFarm.Client.Tasks
         /// Splits up file into subtasks among validNodes based on performance
         /// Single subtask per node (see RenderSplit description)
         /// </summary>
-        private Dictionary<RenderNode, RenderSubTask> GetSplitSubTasks(List<RenderNode> validNodes, bool isVertical = false, decimal overlap = 0.01m)
-        {
+        private Dictionary<RenderNode, RenderSubTask> GetSplitSubTasks(List<RenderNode> validNodes, bool isVertical = false, decimal overlap = 0.01m) {
             Dictionary<RenderNode, decimal> shares = GetRelativePerformance(validNodes);
 
             Dictionary<RenderNode, RenderSubTask> tasks = new Dictionary<RenderNode, RenderSubTask>();
             decimal offsetX = 0;
-            foreach (RenderNode node in validNodes)
-            {
+            foreach (RenderNode node in validNodes) {
                 decimal share = shares[node];
 
                 if (node == validNodes.Last())
@@ -135,8 +115,7 @@ namespace LogicReinc.BlendFarm.Client.Tasks
                 decimal startX = offsetX;
                 decimal endX = offsetX + share;
 
-                if (overlap > 0)
-                {
+                if (overlap > 0) {
                     startX = Math.Max(0, startX - overlap);
                     endX = Math.Min(1, endX + overlap);
                 }

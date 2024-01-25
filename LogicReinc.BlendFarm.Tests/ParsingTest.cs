@@ -4,19 +4,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LogicReinc.BlendFarm.Tests
-{
+namespace LogicReinc.BlendFarm.Tests {
     /// <summary>
     /// Tests for parsing
     /// </summary>
     [TestClass]
-    public class ParsingTest
-    {
+    public class ParsingTest {
         static string[] existing_versions = new string[] { "blender-2.91.0", "blender-2.83.9" };
 
         [TestMethod]
-        public void GetBlenderVersions()
-        {
+        public void GetBlenderVersions() {
             List<BlenderVersion> versions = BlenderVersion.GetBlenderVersions();
 
             Assert.IsTrue(versions.Count > 10);

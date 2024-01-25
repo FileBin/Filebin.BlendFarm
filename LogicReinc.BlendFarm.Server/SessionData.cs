@@ -6,14 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Server
-{
+namespace LogicReinc.BlendFarm.Server {
     /// <summary>
     /// Contains information about sessions (Blend files and such)
     /// Keeps track of them by SessionID
     /// </summary>
-    public class SessionData
-    {
+    public class SessionData {
         /// <summary>
         /// Keeps track of ongoing sessions by SessionID
         /// </summary>
@@ -50,10 +48,8 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Delete a session and associated blend file
         /// </summary>
-        public void Delete()
-        {
-            lock (Sessions)
-            {
+        public void Delete() {
+            lock (Sessions) {
                 if (Sessions.ContainsKey(SessionID))
                     Sessions.Remove(SessionID);
             }
@@ -65,14 +61,10 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Get or create a session with given SessionID 
         /// </summary>
-        public static SessionData GetOrCreate(string sessionID)
-        {
-            lock (Sessions)
-            {
-                if (!Sessions.ContainsKey(sessionID))
-                {
-                    Sessions.Add(sessionID, new SessionData()
-                    {
+        public static SessionData GetOrCreate(string sessionID) {
+            lock (Sessions) {
+                if (!Sessions.ContainsKey(sessionID)) {
+                    Sessions.Add(sessionID, new SessionData() {
                         SessionID = sessionID
                     });
                 }
@@ -83,10 +75,8 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Get a session with given SessionID if it exists 
         /// </summary>
-        public static SessionData Get(string sessionID)
-        {
-            lock (Sessions)
-            {
+        public static SessionData Get(string sessionID) {
+            lock (Sessions) {
                 if (!Sessions.ContainsKey(sessionID))
                     return null;
                 return Sessions[sessionID];
@@ -96,22 +86,18 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Deletes all sessions with provided IDs and their associated files
         /// </summary>
-        public static void CleanUp(params string[] args)
-        {
+        public static void CleanUp(params string[] args) {
             List<SessionData> sessions = null;
             lock (Sessions)
                 sessions = args.Distinct().Where(x => Sessions.ContainsKey(x)).Select(x => Sessions[x]).ToList();
             foreach (SessionData ses in sessions)
-                try
-                {
+                try {
                     ses.Delete();
-                }
-                catch (Exception ex) { }
+                } catch (Exception ex) { }
         }
-        public static async Task CleanUpDelayed(int ms, params string[] args)
-        {
+        public static async Task CleanUpDelayed(int ms, params string[] args) {
             List<SessionData> sessions = null;
-            lock(Sessions)
+            lock (Sessions)
                 sessions = args.Distinct().Where(x => Sessions.ContainsKey(x)).Select(x => Sessions[x]).ToList();
 
             foreach (SessionData ses in sessions)
@@ -119,26 +105,22 @@ namespace LogicReinc.BlendFarm.Server
 
             await Task.Delay(ms);
             foreach (SessionData ses in sessions)
-                try
-                {
+                try {
                     if (!ses.InUse)
                         ses.Delete();
-                }
-                catch (Exception ex) { }
+                } catch (Exception ex) { }
         }
 
         /// <summary>
         /// Called when updating file
         /// </summary>
-        public void UpdatingFile()
-        {
+        public void UpdatingFile() {
             FileID = -1;
         }
         /// <summary>
         /// Sets a new FileID (indicating updated blend file)
         /// </summary>
-        public void UpdatedFile(long fileId)
-        {
+        public void UpdatedFile(long fileId) {
             FileID = fileId;
             Updated = DateTime.Now;
         }
@@ -147,8 +129,7 @@ namespace LogicReinc.BlendFarm.Server
         /// Get formatted path to blend file for this session
         /// </summary>
         /// <returns></returns>
-        public string GetBlendFilePath()
-        {
+        public string GetBlendFilePath() {
             return Path.Combine(SystemInfo.RelativeToApplicationDirectory(ServerSettings.Instance.BlenderFiles), SessionID) + ".blend";
         }
 
@@ -157,8 +138,7 @@ namespace LogicReinc.BlendFarm.Server
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public static string GetFilePath(string session)
-        {
+        public static string GetFilePath(string session) {
             SessionData sess = null;
             lock (Sessions)
                 if (Sessions.ContainsKey(session))

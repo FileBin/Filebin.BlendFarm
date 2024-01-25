@@ -6,13 +6,11 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace LogicReinc.BlendFarm.Shared
-{
+namespace LogicReinc.BlendFarm.Shared {
     /// <summary>
     /// Used to retrieve versions of Blender (and Caching)
     /// </summary>
-    public class BlenderVersion
-    {
+    public class BlenderVersion {
         private static string[] REQUIRED_OS = new string[] { OS_LINUX, OS_WINDOWS, OS_MACOS };
 
         private const string OS_LINUX = "linux64";
@@ -41,22 +39,17 @@ namespace LogicReinc.BlendFarm.Shared
         public bool HasAll => !string.IsNullOrEmpty(UrlLinux64) && !string.IsNullOrEmpty(UrlWindows64);
 
 
-        public static BlenderVersion FindVersion(string version, string cacheFile = null, string customFile = null)
-        {
+        public static BlenderVersion FindVersion(string version, string cacheFile = null, string customFile = null) {
             return GetBlenderVersions(cacheFile, customFile).FirstOrDefault(x => x.Name == version);
         }
 
-        public static List<BlenderVersion> GetCustomBlenderVersions(string customFile = null)
-        {
+        public static List<BlenderVersion> GetCustomBlenderVersions(string customFile = null) {
             List<BlenderVersion> custom = new List<BlenderVersion>();
-            if (customFile != null && File.Exists(customFile))
-            {
+            if (customFile != null && File.Exists(customFile)) {
                 string[] customLines = File.ReadAllLines(customFile);
-                foreach (string line in customLines)
-                {
+                foreach (string line in customLines) {
                     if (!string.IsNullOrEmpty(line))
-                        custom.Add(new BlenderVersion()
-                        {
+                        custom.Add(new BlenderVersion() {
                             IsCustom = true,
                             Name = line.Trim()
                         });
@@ -67,10 +60,8 @@ namespace LogicReinc.BlendFarm.Shared
         /// <summary>
         /// Retrieve available versions of Blender (from cache if available/recent)
         /// </summary>
-        public static List<BlenderVersion> GetBlenderVersions(string cacheFile = null, string customFile = null)
-        {
-            if (cacheFile != null)
-            {
+        public static List<BlenderVersion> GetBlenderVersions(string cacheFile = null, string customFile = null) {
+            if (cacheFile != null) {
                 string fullCachePath = Path.GetFullPath(cacheFile);
 
                 //Intercept designer
@@ -86,15 +77,13 @@ namespace LogicReinc.BlendFarm.Shared
                 //Refresh every >= CACHE_DAYS days
                 if (Math.Abs(cache.Date.DayOfYear - DateTime.Now.DayOfYear) < CACHE_DAYS)
                     return custom.Concat(cache.Versions).ToList();
-            try
-            {
+            try {
                 List<BlenderVersion> versions = new List<BlenderVersion>();
 
                 List<WebIndex> coreVersions = WebIndex.GetIndexes(VERSIONS_URL);
 
                 //Parse Blenders Previous Version pages..
-                foreach (WebIndex v in coreVersions.Where(x => REGEX_BLENDERVERSION.IsMatch(x.Name) && !x.IsFile))
-                {
+                foreach (WebIndex v in coreVersions.Where(x => REGEX_BLENDERVERSION.IsMatch(x.Name) && !x.IsFile)) {
                     List<WebIndex> subVersions = v.GetIndexes();
 
                     List<(WebIndex, Match)> matches = subVersions.Select(x => (x, REGEX_BLENDERSUBVERSION.Match(x.Name)))
@@ -104,19 +93,16 @@ namespace LogicReinc.BlendFarm.Shared
                     Dictionary<string, BlenderVersion> submapping = new Dictionary<string, BlenderVersion>();
 
 
-                    foreach (var match in matches)
-                    {
+                    foreach (var match in matches) {
                         string url = match.Item1.Url;
                         DateTime date = match.Item1.DateTime;
                         string name = match.Item2.Groups[1].Value;
                         string os = match.Item2.Groups[2].Value;
                         string ext = match.Item2.Groups[3].Value.ToLower();
 
-                        if (IsValidFile(os, ext))
-                        {
+                        if (IsValidFile(os, ext)) {
                             if (!submapping.ContainsKey(name))
-                                submapping.Add(name, new BlenderVersion()
-                                {
+                                submapping.Add(name, new BlenderVersion() {
                                     Name = name,
                                     Date = date
                                 });
@@ -133,9 +119,7 @@ namespace LogicReinc.BlendFarm.Shared
 
                 Cache.UpdateCache(vs, cacheFile);
                 return custom.Concat(vs).ToList();
-            }
-            catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("Failed to load versions due to " + ex.Message);
                 if (cache != null)
                     return custom.Concat(cache.Versions).ToList();
@@ -147,10 +131,8 @@ namespace LogicReinc.BlendFarm.Shared
         /// <summary>
         /// Returns the download Url for the provided os
         /// </summary>
-        public string GetOSUrl(string os)
-        {
-            switch (os)
-            {
+        public string GetOSUrl(string os) {
+            switch (os) {
                 case OS_LINUX:
                     return UrlLinux64;
                 case OS_WINDOWS:
@@ -165,11 +147,9 @@ namespace LogicReinc.BlendFarm.Shared
         /// <summary>
         /// Checks if the file extension matches the OS
         /// </summary>
-        public static bool IsValidFile(string os, string ext)
-        {
+        public static bool IsValidFile(string os, string ext) {
             bool valid = false;
-            switch (os)
-            {
+            switch (os) {
                 case OS_WINDOWS:
                 case OS_WINDOWS_x64:
                     if (ext == "zip")
@@ -189,10 +169,8 @@ namespace LogicReinc.BlendFarm.Shared
             return valid;
         }
 
-        private void AssignUrl(string os, string url)
-        {
-            switch (os)
-            {
+        private void AssignUrl(string os, string url) {
+            switch (os) {
                 case OS_LINUX:
                 case OS_LINUX_x64:
                     UrlLinux64 = url;
@@ -210,10 +188,8 @@ namespace LogicReinc.BlendFarm.Shared
             }
         }
 
-        public static string GetOldOSName(string os)
-        {
-            switch (os)
-            {
+        public static string GetOldOSName(string os) {
+            switch (os) {
                 case OS_LINUX:
                 case OS_LINUX_x64:
                     return OS_LINUX;
@@ -227,10 +203,8 @@ namespace LogicReinc.BlendFarm.Shared
                     return os;
             }
         }
-        public static string GetNewOSName(string os)
-        {
-            switch (os)
-            {
+        public static string GetNewOSName(string os) {
+            switch (os) {
                 case OS_LINUX:
                 case OS_LINUX_x64:
                     return OS_LINUX_x64;
@@ -249,30 +223,25 @@ namespace LogicReinc.BlendFarm.Shared
         /// <summary>
         /// Used to keep track of cache status
         /// </summary>
-        public class Cache
-        {
+        public class Cache {
             public DateTime Date { get; set; }
             public List<BlenderVersion> Versions { get; set; } = new List<BlenderVersion>();
 
-            public static Cache GetCache(string cacheFile = null)
-            {
+            public static Cache GetCache(string cacheFile = null) {
                 if (cacheFile == null)
                     cacheFile = "VersionCache";
 
-                if (File.Exists(cacheFile))
-                {
+                if (File.Exists(cacheFile)) {
                     string cached = File.ReadAllText(cacheFile);
                     return JsonSerializer.Deserialize<Cache>(cached);
                 }
                 return null;
             }
 
-            public static void UpdateCache(List<BlenderVersion> versions, string cacheFile = null)
-            {
-                if(cacheFile == null)
+            public static void UpdateCache(List<BlenderVersion> versions, string cacheFile = null) {
+                if (cacheFile == null)
                     cacheFile = "VersionCache";
-                File.WriteAllText(cacheFile, JsonSerializer.Serialize(new Cache()
-                {
+                File.WriteAllText(cacheFile, JsonSerializer.Serialize(new Cache() {
                     Date = DateTime.Now,
                     Versions = versions
                 }));

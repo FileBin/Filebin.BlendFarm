@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode
-{
+namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode {
     [BlendFarmHeader("checkProtocol")]
-    public class CheckProtocolRequest : BlendFarmMessage
-    {
+    public class CheckProtocolRequest : BlendFarmMessage {
         public int ClientVersionMajor { get; set; } = 1;
         public int ClientVersionMinor { get; set; } = 0;
         public int ClientVersionPatch { get; set; } = 5;
@@ -14,8 +12,7 @@ namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode
     }
 
     [BlendFarmHeader("checkProtocolResp")]
-    public class CheckProtocolResponse : BlendFarmMessage
-    {
+    public class CheckProtocolResponse : BlendFarmMessage {
         public int ClientVersionMajor { get; set; } = 1;
         public int ClientVersionMinor { get; set; } = 0;
         public int ClientVersionPatch { get; set; } = 5;

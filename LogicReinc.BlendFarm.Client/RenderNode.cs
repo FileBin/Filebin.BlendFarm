@@ -12,14 +12,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Client
-{
+namespace LogicReinc.BlendFarm.Client {
     /// <summary>
     /// Top-level class to interact with an individual node
     /// Also has some PropertyChanged events for UI (not all)
     /// </summary>
-    public class RenderNode : INotifyPropertyChanged
-    {
+    public class RenderNode : INotifyPropertyChanged {
         //Used to specify the minimum server required version
         //Modified when protocol changes
         public const int MinumumVersionMajor = 1;
@@ -169,31 +167,26 @@ namespace LogicReinc.BlendFarm.Client
         public event PropertyChangedEventHandler PropertyChanged;
 
 
-        public RenderNode()
-        {
-            OnConnected += (n) => 
+        public RenderNode() {
+            OnConnected += (n) =>
                 TriggerPropChange(nameof(Connected));
-            OnDisconnected += (n) =>
-            {
+            OnDisconnected += (n) => {
                 foreach (string k in SyncedMap.Keys.ToList())
                     UpdateSyncedStatus(k, false);
                 TriggerPropChange(nameof(Connected));
             };
         }
 
-        public void SetPassword(string pass)
-        {
+        public void SetPassword(string pass) {
             Pass = pass;
         }
 
-        public void UpdatePerformance(int pixelsRendered, int ms)
-        {
+        public void UpdatePerformance(int pixelsRendered, int ms) {
             decimal msPerPixel = (decimal)((decimal)pixelsRendered / ms);
             PerformanceScorePP = msPerPixel;
         }
 
-        public string GetCurrentLog()
-        {
+        public string GetCurrentLog() {
             return _currentLog.ToString();
         }
 
@@ -201,8 +194,7 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Connects to node and prepare version
         /// </summary>
-        public async Task ConnectAndPrepare(string version)
-        {
+        public async Task ConnectAndPrepare(string version) {
             await Connect();
 
             if (Connected)
@@ -211,14 +203,11 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Connect to node
         /// </summary>
-        public async Task Connect()
-        {
-            if (!Connected)
-            {
+        public async Task Connect() {
+            if (!Connected) {
                 UpdateActivity("Connecting");
 
-                try
-                {
+                try {
                     _currentLog.Clear();
                     Client = await RenderClient.Connect(Address);
                     Client.OnConnected += (a) => OnConnected?.Invoke(this);
@@ -226,30 +215,22 @@ namespace LogicReinc.BlendFarm.Client
                     Client.OnPacket += HandlePacket;
 
                     CheckProtocolResponse protocolResp = null;
-                    try
-                    {
+                    try {
                         protocolResp = await CheckProtocol(MinumumVersionMajor, MinimumVersionMinor, MinimumVersionPatch, Protocol.Version);
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         throw new InvalidOperationException("Outdated protocol, exception during check (" + ex.Message + ")");
                     }
                     if (protocolResp == null || Protocol.Version != protocolResp.ProtocolVersion)
                         throw new InvalidOperationException($"Outdated protocol, update node before connecting (Protocol: {Protocol.Version}, Found: {protocolResp?.ProtocolVersion})");
 
-                    if(protocolResp.RequireAuth)
-                    {
-                        try
-                        {
-                            AuthResponse resp = await Client.Send<AuthResponse>(new AuthRequest()
-                            {
+                    if (protocolResp.RequireAuth) {
+                        try {
+                            AuthResponse resp = await Client.Send<AuthResponse>(new AuthRequest() {
                                 Pass = Pass
                             }, CancellationToken.None);
-                            if(!resp.IsAuthenticated)
+                            if (!resp.IsAuthenticated)
                                 throw new InvalidDataException("Authentication failed");
-                        }
-                        catch(Exception ex)
-                        {
+                        } catch (Exception ex) {
                             throw new InvalidDataException($"Authentication failed ({ex.Message})");
                         }
                     }
@@ -262,15 +243,11 @@ namespace LogicReinc.BlendFarm.Client
 
                     UpdateException("");
                     OnConnected?.Invoke(this);
-                }
-                catch(Exception ex)
-                {
+                } catch (Exception ex) {
                     UpdateException(ex.Message);
                     Client = null;
                     throw;
-                }
-                finally
-                {
+                } finally {
                     UpdateActivity("");
                 }
             }
@@ -278,8 +255,7 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Attempts to recover a session connection
         /// </summary>
-        public async Task<RecoverResponse> ConnectRecover(string[] sessions)
-        {
+        public async Task<RecoverResponse> ConnectRecover(string[] sessions) {
             if (Connected)
                 throw new InvalidOperationException("Already connected");
             await Connect();
@@ -288,20 +264,15 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Attempts to recover a session connection n attempts
         /// </summary>
-        public async Task<RecoverResponse> ConnectRecover(int attempts, int interval, string[] sessions)
-        {
+        public async Task<RecoverResponse> ConnectRecover(int attempts, int interval, string[] sessions) {
             if (Connected)
                 throw new InvalidOperationException("Already connected");
-            for (int i = 0; i < attempts; i++)
-            {
-                try
-                {
+            for (int i = 0; i < attempts; i++) {
+                try {
                     await Connect();
                     return await Recover(sessions);
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine($"Recover failed due to: {ex.Message} ({i+1}/{attempts})");
+                } catch (Exception ex) {
+                    Console.WriteLine($"Recover failed due to: {ex.Message} ({i + 1}/{attempts})");
                 }
                 await Task.Delay(interval);
             }
@@ -311,8 +282,7 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Disconnect from node
         /// </summary>
-        public void Disconnect()
-        {
+        public void Disconnect() {
             if (Connected)
                 Client.Disconnect();
             Client = null;
@@ -323,34 +293,28 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Handle package from client
         /// </summary>
-        private void HandlePacket(RenderClient client, BlendFarmMessage p)
-        {
-            if (p is RenderInfoResponse)
-            {
+        private void HandlePacket(RenderClient client, BlendFarmMessage p) {
+            if (p is RenderInfoResponse) {
                 RenderInfoResponse renderResp = ((RenderInfoResponse)p);
 
                 double progress = Math.Round(((double)renderResp.TilesFinished / renderResp.TilesTotal) * 100, 1);
                 if (renderResp.TaskID == CurrentTask)
                     UpdateActivity($"Rendering ({renderResp.TilesFinished}/{renderResp.TilesTotal})", progress);
             }
-            if(p is RenderBatchResult)
-            {
+            if (p is RenderBatchResult) {
                 RenderBatchResult renderBatchResult = ((RenderBatchResult)p);
 
                 OnBatchResult?.Invoke(this, renderBatchResult);
-               
+
             }
-            if(p is BlendFarmDisconnected packDisconnected)
-            {
+            if (p is BlendFarmDisconnected packDisconnected) {
                 if (packDisconnected.IsError)
                     UpdateException(packDisconnected.Reason);
             }
-            if(p is ActivityRequest packAct)
-            {
+            if (p is ActivityRequest packAct) {
                 UpdateActivity(packAct.Activity, packAct.Progress);
             }
-            if(p is ConsoleActivityResponse packConsole)
-            {
+            if (p is ConsoleActivityResponse packConsole) {
                 _currentLog.AppendLine(packConsole.Output);
                 OnLog?.Invoke(this, packConsole.Output);
             }
@@ -358,18 +322,14 @@ namespace LogicReinc.BlendFarm.Client
 
         //Remote Tasks
 
-        public async Task<RecoverResponse> Recover(string[] sessions)
-        {
-            return await Client.Send<RecoverResponse>(new RecoverRequest()
-            {
+        public async Task<RecoverResponse> Recover(string[] sessions) {
+            return await Client.Send<RecoverResponse>(new RecoverRequest() {
                 SessionIDs = sessions
             }, CancellationToken.None);
         }
 
-        public async Task<CheckProtocolResponse> CheckProtocol(int major, int minor, int patch, int version)
-        {
-            return await Client.Send<CheckProtocolResponse>(new CheckProtocolRequest()
-            {
+        public async Task<CheckProtocolResponse> CheckProtocol(int major, int minor, int patch, int version) {
+            return await Client.Send<CheckProtocolResponse>(new CheckProtocolRequest() {
                 ClientVersionMajor = major,
                 ClientVersionMinor = minor,
                 ClientVersionPatch = patch,
@@ -377,8 +337,7 @@ namespace LogicReinc.BlendFarm.Client
             }, CancellationToken.None);
         }
 
-        public void RequestConsoleActivityRedirect()
-        {
+        public void RequestConsoleActivityRedirect() {
             Client.Send(new ConsoleActivityRequest());
         }
 
@@ -386,25 +345,21 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Prepare a version of blender on node
         /// </summary>
-        public async Task<PrepareResponse> PrepareVersion(string version)
-        {
+        public async Task<PrepareResponse> PrepareVersion(string version) {
             if (Client == null)
                 throw new InvalidOperationException("Client not connected");
 
             UpdateActivity("Downloading Version");
 
-            PrepareResponse resp = await Client.Send<PrepareResponse>(new PrepareRequest()
-            {
+            PrepareResponse resp = await Client.Send<PrepareResponse>(new PrepareRequest() {
                 Version = version
             }, CancellationToken.None);
 
-            if (resp != null && resp.Success)
-            {
+            if (resp != null && resp.Success) {
                 if (!AvailableVersions.Contains(version))
                     AvailableVersions.Add(version);
                 UpdatePreparedStatus(true);
-            }
-            else
+            } else
                 UpdateException($"Failed Version {version}");
 
             UpdateActivity("");
@@ -412,20 +367,17 @@ namespace LogicReinc.BlendFarm.Client
             return resp;
         }
 
-        public async Task<SyncResponse> SyncNetworkFile(string sess, long fileid, string windowsPath, string linuxPath, string macOSPath)
-        {
+        public async Task<SyncResponse> SyncNetworkFile(string sess, long fileid, string windowsPath, string linuxPath, string macOSPath) {
             if (Client == null)
                 throw new InvalidOperationException("Client not connected");
             SyncResponse resp = null;
-            try
-            {
+            try {
                 UpdateActivity("Syncing");
 
                 //Start Sync
 
                 //Initialize Sync
-                resp = await Client.Send<SyncResponse>(new SyncNetworkRequest()
-                {
+                resp = await Client.Send<SyncResponse>(new SyncNetworkRequest() {
                     SessionID = sess,
                     FileID = fileid,
                     WindowsPath = windowsPath,
@@ -435,8 +387,7 @@ namespace LogicReinc.BlendFarm.Client
 
                 if (!resp.Success)
                     throw new SyncException(resp.Message);
-                if (resp.SameFile)
-                {
+                if (resp.SameFile) {
                     UpdateSyncedStatus(sess, true);
                     return resp;
                 }
@@ -446,9 +397,7 @@ namespace LogicReinc.BlendFarm.Client
                     UpdateSyncedStatus(sess, true);
                 else
                     UpdateSyncedStatus(sess, false);
-            }
-            finally
-            {
+            } finally {
                 UpdateActivity("");
             }
 
@@ -461,20 +410,17 @@ namespace LogicReinc.BlendFarm.Client
         /// <param name="sess">An identifier for the session</param>
         /// <param name="fileid">An identifier used to differentiate versions</param>
         /// <returns></returns>
-        public async Task<SyncResponse> SyncFile(string sess, long fileid, Stream file, Compression compression)
-        {
+        public async Task<SyncResponse> SyncFile(string sess, long fileid, Stream file, Compression compression) {
             if (Client == null)
                 throw new InvalidOperationException("Client not connected");
             SyncResponse resp = null;
-            try
-            {
+            try {
                 UpdateActivity("Syncing");
 
                 //Start Sync
 
                 //Initialize Sync
-                resp = await Client.Send<SyncResponse>(new SyncRequest()
-                {
+                resp = await Client.Send<SyncResponse>(new SyncRequest() {
                     SessionID = sess,
                     FileID = fileid,
                     Compression = compression
@@ -482,8 +428,7 @@ namespace LogicReinc.BlendFarm.Client
 
                 if (!resp.Success)
                     throw new SyncException(resp.Message);
-                if (resp.SameFile)
-                {
+                if (resp.SameFile) {
                     UpdateSyncedStatus(sess, true);
                     return resp;
                 }
@@ -492,12 +437,10 @@ namespace LogicReinc.BlendFarm.Client
                 byte[] chunk = new byte[1024 * 1024 * 10];
                 int read = 0;
                 long written = 0;
-                while ((read = file.Read(chunk, 0, chunk.Length)) > 0)
-                {
+                while ((read = file.Read(chunk, 0, chunk.Length)) > 0) {
                     byte[] toSend = (read == chunk.Length) ? chunk : chunk.AsSpan(0, read).ToArray();
                     //Send chunk
-                    var uploadResp = await Client.Send<SyncUploadResponse>(new SyncUploadRequest()
-                    {
+                    var uploadResp = await Client.Send<SyncUploadResponse>(new SyncUploadRequest() {
                         Data = toSend, //Convert.ToBase64String(chunk, 0, read),
                         UploadID = resp.UploadID,
                         //Hash = Hash.ComputeSyncHash(toSend) //Used during debugging
@@ -515,8 +458,7 @@ namespace LogicReinc.BlendFarm.Client
                 }
 
                 //Indicate Transfer Complete
-                var complete = await Client.Send<SyncCompleteResponse>(new SyncCompleteRequest()
-                {
+                var complete = await Client.Send<SyncCompleteResponse>(new SyncCompleteRequest() {
                     UploadID = resp.UploadID
                 }, CancellationToken.None);
 
@@ -526,9 +468,7 @@ namespace LogicReinc.BlendFarm.Client
                     UpdateSyncedStatus(sess, true);
                 else
                     UpdateSyncedStatus(sess, false);
-            }
-            finally
-            {
+            } finally {
                 UpdateActivity("");
             }
 
@@ -537,8 +477,7 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Render a batch of RenderSettings
         /// </summary>
-        public async Task<RenderBatchResponse> RenderBatch(RenderBatchRequest req)
-        {
+        public async Task<RenderBatchResponse> RenderBatch(RenderBatchRequest req) {
             if (Client == null)
                 throw new InvalidOperationException("Client not connected");
             if (CurrentTask != null)
@@ -546,34 +485,25 @@ namespace LogicReinc.BlendFarm.Client
 
             RenderBatchResponse resp = null;
             _taskCancelToken = new CancellationTokenSource();
-            try
-            {
+            try {
 
                 CurrentTask = req.TaskID;
 
                 UpdateActivity("Render Loading..");
 
-                while (true)
-                {
-                    try
-                    {
+                while (true) {
+                    try {
                         resp = await Client.Send<RenderBatchResponse>(req, _taskCancelToken.Token);
                         break;
-                    }
-                    catch (BlendFarmDisconnectedException ex)
-                    {
+                    } catch (BlendFarmDisconnectedException ex) {
                         RecoverResponse r = await ConnectRecover(5, 1000, new string[] { req.SessionID });
                         if (!r.Success)
                             throw new RecoverException(r.Message);
-                    }
-                    catch (Exception exOther)
-                    {
+                    } catch (Exception exOther) {
                         throw;
                     }
                 }
-            }
-            finally
-            {
+            } finally {
                 UpdateActivity("");
                 CurrentTask = null;
                 _taskCancelToken = null;
@@ -583,28 +513,22 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Render a single RenderSettings
         /// </summary>
-        public async Task<RenderResponse> Render(RenderRequest req)
-        {
+        public async Task<RenderResponse> Render(RenderRequest req) {
             if (Client == null)
                 throw new InvalidOperationException("Client not connected");
             RenderResponse resp = null;
             _taskCancelToken = new CancellationTokenSource();
-            try
-            {
+            try {
                 CurrentTask = req.TaskID;
 
                 UpdateActivity("Render Loading..");
 
                 int recoverAtts = 0;
-                while (true) 
-                {
-                    try
-                    {
+                while (true) {
+                    try {
                         resp = await Client.Send<RenderResponse>(req, _taskCancelToken.Token);
                         break;
-                    }
-                    catch (BlendFarmDisconnectedException ex)
-                    {
+                    } catch (BlendFarmDisconnectedException ex) {
                         recoverAtts++;
                         if (recoverAtts > 3)
                             throw new RecoverException($"Failed to recover too many times, connection too unstable");
@@ -612,16 +536,12 @@ namespace LogicReinc.BlendFarm.Client
                         RecoverResponse r = await ConnectRecover(5, 1000, new string[] { req.SessionID });
                         if (!r.Success)
                             throw new RecoverException(r.Message);
-                    }
-                    catch (Exception exOther)
-                    {
+                    } catch (Exception exOther) {
                         throw;
                     }
                 }
 
-            }
-            finally
-            {
+            } finally {
                 UpdateActivity("");
                 CurrentTask = null;
                 _taskCancelToken = null;
@@ -629,27 +549,21 @@ namespace LogicReinc.BlendFarm.Client
 
             return resp;
         }
-        
-        public async Task<BlenderPeekResponse> Peek(BlenderPeekRequest req)
-        {
+
+        public async Task<BlenderPeekResponse> Peek(BlenderPeekRequest req) {
             if (Client == null)
                 throw new InvalidOperationException("Client not connected");
             BlenderPeekResponse resp = null;
             _taskCancelToken = new CancellationTokenSource();
-            try
-            {
+            try {
                 UpdateActivity("Peeking...");
 
                 int recoverAtts = 0;
-                while (true)
-                {
-                    try
-                    {
+                while (true) {
+                    try {
                         resp = await Client.Send<BlenderPeekResponse>(req, _taskCancelToken.Token);
                         break;
-                    }
-                    catch (BlendFarmDisconnectedException ex)
-                    {
+                    } catch (BlendFarmDisconnectedException ex) {
                         recoverAtts++;
                         if (recoverAtts > 3)
                             throw new RecoverException($"Failed to recover too many times, connection too unstable");
@@ -657,16 +571,12 @@ namespace LogicReinc.BlendFarm.Client
                         RecoverResponse r = await ConnectRecover(5, 1000, new string[] { req.SessionID });
                         if (!r.Success)
                             throw new RecoverException(r.Message);
-                    }
-                    catch (Exception exOther)
-                    {
+                    } catch (Exception exOther) {
                         throw;
                     }
                 }
 
-            }
-            finally
-            {
+            } finally {
                 UpdateActivity("");
                 CurrentTask = null;
                 _taskCancelToken = null;
@@ -680,15 +590,11 @@ namespace LogicReinc.BlendFarm.Client
         /// Cancels an ongoing render with SesionID
         /// </summary>
         /// <returns></returns>
-        public async Task CancelRender(string sessionID)
-        {
-            if (_taskCancelToken != null)
-            {
+        public async Task CancelRender(string sessionID) {
+            if (_taskCancelToken != null) {
                 _taskCancelToken.Cancel();
-                await Task.Run(() =>
-                {
-                    Client.Send(new CancelRenderRequest()
-                    {
+                await Task.Run(() => {
+                    Client.Send(new CancelRenderRequest() {
                         Session = sessionID
                     });
                     UpdateActivity(Activity, -1);
@@ -702,15 +608,13 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Returns information about this machine
         /// </summary>
-        public async Task<ComputerInfoResponse> GetComputerInfo()
-        {
+        public async Task<ComputerInfoResponse> GetComputerInfo() {
             if (!Connected)
                 throw new InvalidOperationException("Not connected");
 
             ComputerInfoResponse resp = await Client.Send<ComputerInfoResponse>(new ComputerInfoRequest(), CancellationToken.None);
 
-            if (resp != null)
-            {
+            if (resp != null) {
                 ComputerName = resp.Name;
                 Cores = resp.Cores;
                 OS = resp.OS;
@@ -720,35 +624,29 @@ namespace LogicReinc.BlendFarm.Client
         }
 
 
-        public async Task<bool> IsBusy()
-        {
+        public async Task<bool> IsBusy() {
             return (await Client.Send<IsBusyResponse>(new IsBusyRequest(), CancellationToken.None))?.IsBusy ?? false;
         }
 
         /// <summary>
         /// Check if a version is present on node
         /// </summary>
-        public async Task<bool> CheckVersion(string version)
-        {
+        public async Task<bool> CheckVersion(string version) {
             if (Client == null)
                 throw new InvalidOperationException("Client not connected");
 
-            if (!AvailableVersions.Contains(version))
-            {
+            if (!AvailableVersions.Contains(version)) {
 
-                var resp = await Client.Send<IsVersionAvailableResponse>(new IsVersionAvailableRequest()
-                {
+                var resp = await Client.Send<IsVersionAvailableResponse>(new IsVersionAvailableRequest() {
                     Version = version
                 }, CancellationToken.None);
-                if (resp.Success)
-                {
+                if (resp.Success) {
                     if (!AvailableVersions.Contains(version))
                         AvailableVersions.Add(version);
                     return true;
                 }
                 return false;
-            }
-            else
+            } else
                 return true;
         }
         /// <summary>
@@ -757,48 +655,40 @@ namespace LogicReinc.BlendFarm.Client
         /// <param name="sess">An identifier for the session</param>
         /// <param name="id">An identifier for the file(.blend)</param>
         /// <returns></returns>
-        public async Task<bool> CheckSyncFile(string sess, long id)
-        {
+        public async Task<bool> CheckSyncFile(string sess, long id) {
             if (Client == null)
                 throw new InvalidOperationException("Client not connected");
 
 
-            var resp = await Client.Send<CheckSyncResponse>(new CheckSyncRequest()
-            {
+            var resp = await Client.Send<CheckSyncResponse>(new CheckSyncRequest() {
                 FileID = id,
                 SessionID = sess
             }, CancellationToken.None);
 
-            if (resp?.Success ?? false)
-            {
+            if (resp?.Success ?? false) {
                 UpdateFileID(id);
                 UpdateSyncedStatus(sess, true);
                 return true;
-            }
-            else
+            } else
                 return false;
         }
 
 
         //PropertyChanges (generally for UI)
-        public void UpdateActivity(string activity, double progress = -1)
-        {
-            if (Activity != activity)
-            {
+        public void UpdateActivity(string activity, double progress = -1) {
+            if (Activity != activity) {
                 ActivityProgress = -1;
                 Activity = activity;
                 OnActivityChanged?.Invoke(this, activity);
                 TriggerPropChange(nameof(Activity), nameof(IsIdle));
             }
-            if(ActivityProgress != progress)
-            {
+            if (ActivityProgress != progress) {
                 ActivityProgress = progress;
                 TriggerPropChange(nameof(ActivityProgress), nameof(HasActivityProgress));
             }
         }
 
-        public bool IsSessionSynced(string sessionID)
-        {
+        public bool IsSessionSynced(string sessionID) {
             if (sessionID == null)
                 return false;
 
@@ -808,32 +698,25 @@ namespace LogicReinc.BlendFarm.Client
             return sessionSynced;
         }
 
-        public void UpdateFileID(long id)
-        {
-            if (LastFileID != id)
-            {
+        public void UpdateFileID(long id) {
+            if (LastFileID != id) {
                 LastFileID = id;
                 OnFileIDChanged?.Invoke(this, id);
                 TriggerPropChange(nameof(LastFileID));
             }
         }
-        public void UpdateException(string excp)
-        {
-            if (Exception != excp)
-            {
+        public void UpdateException(string excp) {
+            if (Exception != excp) {
                 Exception = excp;
                 TriggerPropChange(nameof(Exception));
             }
         }
-        public void UpdateLastStatus(string status)
-        {
+        public void UpdateLastStatus(string status) {
             LastStatus = status;
             TriggerPropChange(nameof(LastStatus));
         }
-        public void UpdateSyncedStatus(string sessionId, bool val)
-        {
-            lock(SyncedMap)
-            {
+        public void UpdateSyncedStatus(string sessionId, bool val) {
+            lock (SyncedMap) {
                 if (SyncedMap.ContainsKey(sessionId))
                     SyncedMap[sessionId] = val;
                 else
@@ -842,14 +725,12 @@ namespace LogicReinc.BlendFarm.Client
             TriggerPropChange(nameof(SyncedMap));
             TriggerPropChange(nameof(IsSynced));
         }
-        public void UpdatePreparedStatus(bool val)
-        {
+        public void UpdatePreparedStatus(bool val) {
             IsPrepared = val;
             TriggerPropChange(nameof(IsPrepared));
             //TriggerPropChange(nameof(IsSynced));
         }
-        internal void SelectSessionID(string sessionID)
-        {
+        internal void SelectSessionID(string sessionID) {
             SelectedSessionID = sessionID;
             TriggerPropChange(nameof(SelectedSessionID));
             TriggerPropChange(nameof(IsSynced));
@@ -858,8 +739,7 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Trigger PropertyChanged for all provided property names
         /// </summary>
-        private void TriggerPropChange(params string[] names)
-        {
+        private void TriggerPropChange(params string[] names) {
             foreach (string name in names)
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }

@@ -5,40 +5,33 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Windows
-{
-    public partial class BitmapViewer : Window
-    {
+namespace LogicReinc.BlendFarm.Windows {
+    public partial class BitmapViewer : Window {
         public Bitmap Image { get; set; }
 
         public BitmapViewer() { }
 
-        public BitmapViewer(string title, Bitmap img)
-        {
+        public BitmapViewer(string title, Bitmap img) {
             InitializeComponent();
             Title = title;
             Image image = this.Find<Image>("image");
             image.Source = img;
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             DataContext = this;
             AvaloniaXamlLoader.Load(this);
         }
 
 
-        public static async Task Show(Window owner, string title, Bitmap image)
-        {
+        public static async Task Show(Window owner, string title, Bitmap image) {
             await Show(owner, title, image, 500, 400);
         }
-        public static async Task ShowOnUIThread(Window owner, string title, Bitmap image)
-        {
+        public static async Task ShowOnUIThread(Window owner, string title, Bitmap image) {
             await Dispatcher.UIThread.InvokeAsync(() => Show(owner, title, image));
         }
 
-        public static async Task Show(Window owner, string title, Bitmap image, int width, int height)
-        {
+        public static async Task Show(Window owner, string title, Bitmap image, int width, int height) {
             var window = new BitmapViewer(title, image);
             window.Width = width;
             window.Height = height;

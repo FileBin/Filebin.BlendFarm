@@ -15,14 +15,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Server
-{
+namespace LogicReinc.BlendFarm.Server {
     /// <summary>
     /// Manages different versions of Blender and their usage
     /// Assumes maximum of one render active at a time.
     /// </summary>
-    public class BlenderManager
-    {
+    public class BlenderManager {
         private static string _scriptRender = null;
         private static string _scriptPeek = null;
         private static string _scriptExtract = null;
@@ -47,16 +45,14 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Use Settings.Instance for directories 
         /// </summary>
-        public BlenderManager()
-        {
+        public BlenderManager() {
             BlenderData = SystemInfo.RelativeToApplicationDirectory(ServerSettings.Instance.BlenderData);
             RenderData = SystemInfo.RelativeToApplicationDirectory(ServerSettings.Instance.RenderData);
         }
         /// <summary>
         /// Use specific BlenderData and RenderData directories
         /// </summary>
-        public BlenderManager(string blenderData, string renderData)
-        {
+        public BlenderManager(string blenderData, string renderData) {
             BlenderData = SystemInfo.RelativeToApplicationDirectory(blenderData);
             RenderData = SystemInfo.RelativeToApplicationDirectory(renderData);
         }
@@ -65,31 +61,26 @@ namespace LogicReinc.BlendFarm.Server
         /// Returns formatted BlenderData directory path
         /// </summary>
         /// <returns></returns>
-        public string GetBlenderDataPath()
-        {
+        public string GetBlenderDataPath() {
             return Path.GetFullPath(BlenderData);
         }
 
-        public static string GetVersionPath(string blenderDataPath, string version, string os)
-        {
+        public static string GetVersionPath(string blenderDataPath, string version, string os) {
             return Path.Combine(blenderDataPath, $"{version}-{os}");
         }
         /// <summary>
         /// Returns formatted path to a blender version directory (specific os)
         /// </summary>
-        public string GetVersionPath(string version, string os)
-        {
+        public string GetVersionPath(string version, string os) {
             return GetVersionPath(GetBlenderDataPath(), version, os);
         }
         /// <summary>
         /// Returns formatted path to the render script, if it doesn't exist or is outdated, write it.
         /// Changed script is ignored if Settings.BypassScriptUpdate is true
         /// </summary>
-        public string GetRenderScriptPath()
-        {
+        public string GetRenderScriptPath() {
             string path = Path.Combine(GetBlenderDataPath(), $"render.py");
-            if (!File.Exists(path) || (!ServerSettings.Instance.BypassScriptUpdate && File.ReadAllText(path) != _scriptRender))
-            {
+            if (!File.Exists(path) || (!ServerSettings.Instance.BypassScriptUpdate && File.ReadAllText(path) != _scriptRender)) {
                 Directory.CreateDirectory(GetBlenderDataPath());
                 File.WriteAllText(path, GetRenderScript());
             }
@@ -99,11 +90,9 @@ namespace LogicReinc.BlendFarm.Server
         /// Returns formatted path to the peek script, if it doesn't exist or is outdated, write it.
         /// Changed script is ignored if Settings.BypassScriptUpdate is true
         /// </summary>
-        public string GetPeekScriptPath()
-        {
+        public string GetPeekScriptPath() {
             string path = Path.Combine(GetBlenderDataPath(), $"peek.py");
-            if (!File.Exists(path) || (!ServerSettings.Instance.BypassScriptUpdate && File.ReadAllText(path) != _scriptRender))
-            {
+            if (!File.Exists(path) || (!ServerSettings.Instance.BypassScriptUpdate && File.ReadAllText(path) != _scriptRender)) {
                 Directory.CreateDirectory(GetBlenderDataPath());
                 File.WriteAllText(path, GetPeekScript());
             }
@@ -113,11 +102,9 @@ namespace LogicReinc.BlendFarm.Server
         /// Returns formatted path to the rewrite script, if it doesn't exist or is outdated, write it.
         /// Changed script is ignored if Settings.BypassScriptUpdate is true
         /// </summary>
-        public string GetExtractDependenciesScriptPath()
-        {
+        public string GetExtractDependenciesScriptPath() {
             string path = Path.Combine(GetBlenderDataPath(), $"rewrite.py");
-            if (!File.Exists(path) || (!ServerSettings.Instance.BypassScriptUpdate && File.ReadAllText(path) != _scriptRender))
-            {
+            if (!File.Exists(path) || (!ServerSettings.Instance.BypassScriptUpdate && File.ReadAllText(path) != _scriptRender)) {
                 Directory.CreateDirectory(GetBlenderDataPath());
                 File.WriteAllText(path, GetExtractDependenciesScript());
             }
@@ -127,19 +114,16 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Returns OS version, Blender formatted (eg. windows64, linux64)
         /// </summary>
-        public string GetOSVersion()
-        {
+        public string GetOSVersion() {
             return SystemInfo.GetOSName();
         }
 
 
-        public static string GetVersionExecutablePath(string blenderDataPath, string version)
-        {
+        public static string GetVersionExecutablePath(string blenderDataPath, string version) {
             string os = SystemInfo.GetOSName();
             string blenderDir = GetVersionPath(blenderDataPath, version, os);
             string executable = null;
-            switch (os)
-            {
+            switch (os) {
                 case SystemInfo.OS_WINDOWS64:
                     executable = $"{blenderDir}/blender.exe";
                     break;
@@ -152,8 +136,7 @@ namespace LogicReinc.BlendFarm.Server
             }
             return executable;
         }
-        public static bool IsVersionValid(string blenderDataPath, string version)
-        {
+        public static bool IsVersionValid(string blenderDataPath, string version) {
             string os = SystemInfo.GetOSName();
             string blenderDir = GetVersionPath(blenderDataPath, version, os);
             if (!Directory.Exists(blenderDir))
@@ -163,8 +146,7 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Check if a specific version of Blender is present
         /// </summary>
-        public bool IsVersionAvailable(string version)
-        {
+        public bool IsVersionAvailable(string version) {
             //if (!SystemInfo.IsOS(SystemInfo.OS_MACOS))
             return Directory.Exists(GetVersionPath(version, SystemInfo.GetOSName()));
             //else
@@ -173,15 +155,11 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Attempt to provide a version of Blender
         /// </summary>
-        public bool TryPrepare(string version, Action<string, double> onProgress = null)
-        {
-            try
-            {
+        public bool TryPrepare(string version, Action<string, double> onProgress = null) {
+            try {
                 Prepare(version, onProgress);
                 return true;
-            }
-            catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine("TryPrepare failed due to: " + ex.Message);
                 return false;
             }
@@ -190,8 +168,7 @@ namespace LogicReinc.BlendFarm.Server
         /// Prepare a version of Blender
         /// </summary>
         /// <param name="version"></param>
-        public void Prepare(string version, Action<string, double> onProgress = null)
-        {
+        public void Prepare(string version, Action<string, double> onProgress = null) {
             BlenderVersion v = BlenderVersion.FindVersion(version, SystemInfo.RelativeToApplicationDirectory("VersionCache"), SystemInfo.RelativeToApplicationDirectory("VersionCustom"));
 
             if (v == null)
@@ -209,10 +186,8 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Download a specific version of Blender for OS
         /// </summary>
-        public void Download(string os, BlenderVersion version, Action<string, double> onProgress = null)
-        {
-            switch (os)
-            {
+        public void Download(string os, BlenderVersion version, Action<string, double> onProgress = null) {
+            switch (os) {
                 case "windows64":
                     DownloadWindows(version, onProgress);
                     break;
@@ -231,14 +206,12 @@ namespace LogicReinc.BlendFarm.Server
         /// Downloads windows version of a specific version of Blender (And extract it)
         /// </summary>
         /// <param name="version"></param>
-        public void DownloadWindows(BlenderVersion version, Action<string, double> onProgress = null)
-        {
+        public void DownloadWindows(BlenderVersion version, Action<string, double> onProgress = null) {
             string os = "windows64";
             string ext = "zip";
             string archiveName = $"{version.Name}-{os}.{ext}";
             string archivePath = Path.Combine(GetBlenderDataPath(), archiveName);
-            try
-            {
+            try {
                 Directory.CreateDirectory(GetBlenderDataPath());
 
                 /*
@@ -258,9 +231,7 @@ namespace LogicReinc.BlendFarm.Server
                 EnsureOldDirectoryFormat(version.Name, os);
 
                 Console.WriteLine($"{version.Name} ready");
-            }
-            catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine($"Exception during extraction:" + ex.Message);
                 if (Directory.Exists(GetVersionPath(version.Name, os)))
                     Directory.Delete(GetVersionPath(version.Name, os));
@@ -272,14 +243,12 @@ namespace LogicReinc.BlendFarm.Server
         /// Downloads a linux version of a specific version of Blender (And extract it)
         /// </summary>
         /// <param name="version"></param>
-        public void DownloadLinux(BlenderVersion version, Action<string, double> onProgress = null)
-        {
+        public void DownloadLinux(BlenderVersion version, Action<string, double> onProgress = null) {
             string os = "linux64";
             string ext = "tar.xz";
             string archiveName = $"{version.Name}-{os}.{ext}";
             string archivePath = Path.Combine(GetBlenderDataPath(), archiveName);
-            try
-            {
+            try {
                 string blenderDataPath = GetBlenderDataPath();
 
                 Directory.CreateDirectory(blenderDataPath);
@@ -298,42 +267,30 @@ namespace LogicReinc.BlendFarm.Server
                 List<(string, string)> links = new List<(string, string)>();
                 string currentDir = "";
                 using (FileStream str = new FileStream(archivePath, FileMode.Open))
-                using (var reader = ReaderFactory.Open(str))
-                {
-                    while (reader.MoveToNextEntry())
-                    {
-                        if (!reader.Entry.IsDirectory)
-                        {
-                            if (reader.Entry.LinkTarget != null)
-                            {
+                using (var reader = ReaderFactory.Open(str)) {
+                    while (reader.MoveToNextEntry()) {
+                        if (!reader.Entry.IsDirectory) {
+                            if (reader.Entry.LinkTarget != null) {
                                 Console.WriteLine($"Link detected, workaround..({reader.Entry.Key}): {reader.Entry.LinkTarget}");
                                 string dir = Path.GetDirectoryName(reader.Entry.Key);
                                 links.Add((reader.Entry.Key, Path.Combine(dir, reader.Entry.LinkTarget)));
-                            }
-                            else
-                            {
-                                reader.WriteEntryToDirectory(blenderDataPath, new SharpCompress.Common.ExtractionOptions()
-                                {
+                            } else {
+                                reader.WriteEntryToDirectory(blenderDataPath, new SharpCompress.Common.ExtractionOptions() {
                                     ExtractFullPath = true,
                                     Overwrite = true
                                 });
                             }
-                        }
-                        else
+                        } else
                             currentDir = reader.Entry.Key;
                     }
                 }
                 if (links.Count > 0)
                     Console.WriteLine("Fixing symlinks by copy..");
-                foreach ((string, string) link in links)
-                {
-                    try
-                    {
+                foreach ((string, string) link in links) {
+                    try {
                         Console.WriteLine($"SymLink by Copy: ({link.Item1}) => ({link.Item2})");
                         File.Copy(Path.Combine(blenderDataPath, link.Item2), Path.Combine(blenderDataPath, link.Item1));
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         Console.WriteLine("Failed to fake-link due to: " + ex.Message);
                     }
                 }
@@ -344,8 +301,7 @@ namespace LogicReinc.BlendFarm.Server
                 Console.WriteLine("Calling chmod for required permissions");
 
                 //Otherwise can't run blender, not particularily happy with this.
-                new ProcessStartInfo()
-                {
+                new ProcessStartInfo() {
                     FileName = "chmod",
                     Arguments = "-R u=rwx " + GetVersionPath(version.Name, os),
                     UseShellExecute = false,
@@ -353,9 +309,7 @@ namespace LogicReinc.BlendFarm.Server
                     CreateNoWindow = true
                 }.WaitAndPrint();
 
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 if (Directory.Exists(GetVersionPath(version.Name, os)))
                     Directory.Delete(GetVersionPath(version.Name, os));
                 if (File.Exists(archivePath))
@@ -366,14 +320,12 @@ namespace LogicReinc.BlendFarm.Server
         /// Downloads macos version of a specific version of Blender (And extract it)
         /// </summary>
         /// <param name="version"></param>
-        public void DownloadMacOS(BlenderVersion version, Action<string, double> onProgress = null)
-        {
+        public void DownloadMacOS(BlenderVersion version, Action<string, double> onProgress = null) {
             string os = "macOS";
             string ext = "dmg";
             string archiveName = $"{version.Name}-{os}.{ext}";
             string archivePath = Path.Combine(GetBlenderDataPath(), archiveName);
-            try
-            {
+            try {
                 Directory.CreateDirectory(GetBlenderDataPath());
 
                 /*
@@ -393,10 +345,8 @@ namespace LogicReinc.BlendFarm.Server
 
                 onProgress?.Invoke("Extracting", -1);
                 Console.WriteLine($"Mounting [{archivePath}] to [{imagePath}]");
-                Process mountProcess = new Process()
-                {
-                    StartInfo = new ProcessStartInfo()
-                    {
+                Process mountProcess = new Process() {
+                    StartInfo = new ProcessStartInfo() {
                         FileName = "hdiutil",
                         Arguments = $"attach -mountpoint \"{imagePath}\" \"{archivePath}\"",
                         UseShellExecute = false,
@@ -414,10 +364,8 @@ namespace LogicReinc.BlendFarm.Server
                 CopyRecursive(Path.Combine(imagePath, "Blender.app"), versionPath);
 
                 Console.WriteLine("Unmounting");
-                Process unmountProcess = new Process()
-                {
-                    StartInfo = new ProcessStartInfo()
-                    {
+                Process unmountProcess = new Process() {
+                    StartInfo = new ProcessStartInfo() {
                         FileName = "hdiutil",
                         Arguments = $"detach \"{imagePath}\"",
                         UseShellExecute = false,
@@ -430,9 +378,7 @@ namespace LogicReinc.BlendFarm.Server
                 Console.WriteLine("Unmounted");
 
                 Console.WriteLine($"{version.Name} ready");
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 if (Directory.Exists(GetVersionPath(version.Name, os)))
                     Directory.Delete(GetVersionPath(version.Name, os));
                 if (File.Exists(archivePath))
@@ -440,13 +386,10 @@ namespace LogicReinc.BlendFarm.Server
             }
         }
 
-        private void DownloadInternal(string url, string path, Action<string, double> onProgress = null)
-        {
+        private void DownloadInternal(string url, string path, Action<string, double> onProgress = null) {
             double percentageCom = 0.1;
-            Task.Run(async () =>
-            {
-                using (HttpClient client = new HttpClient())
-                {
+            Task.Run(async () => {
+                using (HttpClient client = new HttpClient()) {
                     HttpResponseMessage resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
                     long length = resp.Content.Headers.ContentLength ?? 0L;
                     long lengthMb = length / 1000 / 1000;
@@ -458,23 +401,19 @@ namespace LogicReinc.BlendFarm.Server
 
                     byte[] buffer = new byte[4096];
                     using (FileStream fstr = new FileStream(path, FileMode.Create))
-                    using (Stream str = stream)
-                    {
+                    using (Stream str = stream) {
                         int written = 0;
                         double lastCom = 0;
                         int read = 0;
-                        while ((read = str.Read(buffer, 0, buffer.Length)) != 0)
-                        {
+                        while ((read = str.Read(buffer, 0, buffer.Length)) != 0) {
                             fstr.Write(buffer, 0, read);
                             written += read;
 
-                            if (length > 0)
-                            {
+                            if (length > 0) {
                                 double progress = ((double)written / length);
-                                if (progress > lastCom + percentageCom)
-                                {
+                                if (progress > lastCom + percentageCom) {
                                     lastCom = progress;
-                                    Console.WriteLine($"Progress ({Math.Floor(progress * 100)}%, {written / (1000*1000)}MB/{lengthMb}MB)");
+                                    Console.WriteLine($"Progress ({Math.Floor(progress * 100)}%, {written / (1000 * 1000)}MB/{lengthMb}MB)");
                                     onProgress?.Invoke($"Downloading", progress);
                                 }
                             }
@@ -485,8 +424,7 @@ namespace LogicReinc.BlendFarm.Server
             Console.WriteLine($"Progress (100%)");
         }
 
-        private void EnsureOldDirectoryFormat(string version, string os)
-        {
+        private void EnsureOldDirectoryFormat(string version, string os) {
             string expectedOld = GetVersionPath(version, BlenderVersion.GetOldOSName(os));
             string expectedNew = GetVersionPath(version, BlenderVersion.GetNewOSName(os));
 
@@ -496,8 +434,7 @@ namespace LogicReinc.BlendFarm.Server
         }
 
 
-        public string GetVersionCommand(string version)
-        {
+        public string GetVersionCommand(string version) {
             string os = SystemInfo.GetOSName();
             string blenderDir = GetVersionPath(version, os);
             string cmd = $"{blenderDir}/blender";
@@ -512,55 +449,45 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Render a single render settings (calls batch underneath with single entry)
         /// </summary>
-        public string Render(string version, string file, BlenderRenderSettings settings, long fileId = -1, Action<BlenderProcess> beforeStart = null, Action<BlenderProcess> beforeEnd = null)
-        {
+        public string Render(string version, string file, BlenderRenderSettings settings, long fileId = -1, Action<BlenderProcess> beforeStart = null, Action<BlenderProcess> beforeEnd = null) {
             return RenderBatch(version, file, new[] { settings }, fileId, beforeStart, beforeEnd).FirstOrDefault();
         }
         /// <summary>
         /// Renders a batch of render settings in a single Blender instance.
         /// </summary>
-        public List<string> RenderBatch(string version, string file, BlenderRenderSettings[] batch, long fileId = -1, Action<BlenderProcess> beforeStart = null, Action<BlenderProcess> beforeEnd = null)
-        {
-            lock (_renderLock)
-            {
+        public List<string> RenderBatch(string version, string file, BlenderRenderSettings[] batch, long fileId = -1, Action<BlenderProcess> beforeStart = null, Action<BlenderProcess> beforeEnd = null) {
+            lock (_renderLock) {
                 if (Busy)
                     throw new InvalidOperationException("Currently already rendering");
                 Busy = true;
             }
 
             //Does an ongoing render process match Blender, File, and File version
-            if(RenderProcess != null && RenderProcess.Active && RenderProcess.IsContinueing && 
-                (version != RenderProcess.Version || file != RenderProcess.File || RenderProcess.FileID != fileId))
-            {
+            if (RenderProcess != null && RenderProcess.Active && RenderProcess.IsContinueing &&
+                (version != RenderProcess.Version || file != RenderProcess.File || RenderProcess.FileID != fileId)) {
                 Console.WriteLine("Old continueing RenderProcess, cancelling..");
                 RenderProcess.Cancel();
                 RenderProcess = null;
             }
 
-            try
-            {
+            try {
 
                 Directory.CreateDirectory(Path.GetFullPath(RenderData));
 
-                try
-                {
+                try {
                     FinalizeSettings(batch);
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     throw new Exception("Failed to parse/finalize settings due to:" + ex.Message);
                 }
 
                 string json = JsonSerializer.Serialize(batch);
-                UseTemporaryFile(json, (path) =>
-                {
+                UseTemporaryFile(json, (path) => {
 
                     string cmd = GetVersionCommand(version);
                     string arg = $"--factory-startup -noaudio -b \"{Path.GetFullPath(file)}\" -P \"{GetRenderScriptPath()}\" -- \"{path}\" {USE_CONTINUATION}";
 
                     //If an continueing process is ongoing, continue instead.
-                    if (RenderProcess == null || !RenderProcess.Active || !RenderProcess.IsContinueing)
-                    {
+                    if (RenderProcess == null || !RenderProcess.Active || !RenderProcess.IsContinueing) {
                         RenderProcess = new BlenderProcess(cmd, arg, version, file, fileId);
 
 
@@ -569,9 +496,7 @@ namespace LogicReinc.BlendFarm.Server
                         RenderProcess.Run();
                         if (beforeEnd != null)
                             beforeEnd(RenderProcess);
-                    }
-                    else
-                    {
+                    } else {
                         if (beforeStart != null)
                             beforeStart(RenderProcess);
                         RenderProcess.Continue(path);
@@ -580,12 +505,9 @@ namespace LogicReinc.BlendFarm.Server
                     }
 
                 });
-                return batch.Select(x => FindOutput(x.Output)).Where(x=>x != null).ToList();
-            }
-            finally
-            {
-                if (!USE_CONTINUATION || !RenderProcess.Active)
-                {
+                return batch.Select(x => FindOutput(x.Output)).Where(x => x != null).ToList();
+            } finally {
+                if (!USE_CONTINUATION || !RenderProcess.Active) {
                     RenderSession = null;
                     RenderProcess = null;
                 }
@@ -593,8 +515,7 @@ namespace LogicReinc.BlendFarm.Server
             }
         }
 
-        public BlenderPeekResponse Peek(string version, string file, long fileId = -1)
-        {
+        public BlenderPeekResponse Peek(string version, string file, long fileId = -1) {
             string cmd = GetVersionCommand(version);
             string arg = $"--factory-startup -noaudio -b \"{Path.GetFullPath(file)}\" -P \"{GetPeekScriptPath()}\"";
 
@@ -611,8 +532,7 @@ namespace LogicReinc.BlendFarm.Server
             return resp;
         }
 
-        public List<FileDependency> ExtractDependencies(string version, string file, long fileId = -1)
-        {
+        public List<FileDependency> ExtractDependencies(string version, string file, long fileId = -1) {
             string cmd = GetVersionCommand(version);
             string arg = $"--factory-startup -noaudio -b \"{Path.GetFullPath(file)}\" -P \"{GetExtractDependenciesScriptPath()}\"";
 
@@ -623,7 +543,7 @@ namespace LogicReinc.BlendFarm.Server
                 throw new Exception("Failed: " + string.Join(", ", result.Exceptions));
 
             List<FileDependency> deps = new List<FileDependency>();
-            foreach(string res in result.Results)
+            foreach (string res in result.Results)
                 deps.Add(JsonSerializer.Deserialize<FileDependency>(res));
 
             return deps;
@@ -634,16 +554,13 @@ namespace LogicReinc.BlendFarm.Server
         /// Checks settings and fills in missing data
         /// </summary>
         /// <param name="batch"></param>
-        private void FinalizeSettings(BlenderRenderSettings[] batch)
-        {
+        private void FinalizeSettings(BlenderRenderSettings[] batch) {
             //Validate Settings
-            for (int i = 0; i < batch.Length; i++)
-            {
+            for (int i = 0; i < batch.Length; i++) {
                 BlenderRenderSettings settings = batch[i];
 
                 //Finalize Settings
-                if (settings == null)
-                {
+                if (settings == null) {
                     settings = new BlenderRenderSettings();
                     batch[i] = settings;
                 }
@@ -652,8 +569,7 @@ namespace LogicReinc.BlendFarm.Server
                     settings.Cores = Environment.ProcessorCount;
 
                 //Check for valid Tile sizes, otherwise, replace with proper one for given device
-                switch (settings.ComputeUnit)
-                {
+                switch (settings.ComputeUnit) {
                     //CPU tile size is optimally 8 for full scenes, but 16 better deals with quick tiles
                     case RenderType.CPU:
                         if (settings.TileWidth <= 0) settings.TileWidth = 16;
@@ -681,8 +597,7 @@ namespace LogicReinc.BlendFarm.Server
                 string outputPath = settings.Output;
 
 
-                if (string.IsNullOrEmpty(outputPath))
-                {
+                if (string.IsNullOrEmpty(outputPath)) {
                     string outputName = settings.TaskID;
                     outputPath = Path.Combine(RenderData, outputName);
                 }
@@ -697,8 +612,7 @@ namespace LogicReinc.BlendFarm.Server
         /// <summary>
         /// Cancel ongoing render
         /// </summary>
-        public void Cancel()
-        {
+        public void Cancel() {
             RenderProcess?.Cancel();
         }
 
@@ -706,16 +620,13 @@ namespace LogicReinc.BlendFarm.Server
         /// Reads render script from assembly 
         /// </summary>
         /// <returns></returns>
-        private static string GetRenderScript()
-        {
-            if (_scriptRender == null)
-            {
+        private static string GetRenderScript() {
+            if (_scriptRender == null) {
                 var assembly = Assembly.GetExecutingAssembly();
                 var resourceName = "LogicReinc.BlendFarm.Server.render.py";
 
                 using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-                using (StreamReader reader = new StreamReader(stream))
-                {
+                using (StreamReader reader = new StreamReader(stream)) {
                     _scriptRender = reader.ReadToEnd();
                 }
             }
@@ -725,16 +636,13 @@ namespace LogicReinc.BlendFarm.Server
         /// Reads peek script from assembly 
         /// </summary>
         /// <returns></returns>
-        private static string GetPeekScript()
-        {
-            if (_scriptPeek == null)
-            {
+        private static string GetPeekScript() {
+            if (_scriptPeek == null) {
                 var assembly = Assembly.GetExecutingAssembly();
                 var resourceName = "LogicReinc.BlendFarm.Server.peek.py";
 
                 using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-                using (StreamReader reader = new StreamReader(stream))
-                {
+                using (StreamReader reader = new StreamReader(stream)) {
                     _scriptPeek = reader.ReadToEnd();
                 }
             }
@@ -744,16 +652,13 @@ namespace LogicReinc.BlendFarm.Server
         /// Reads rewrite script from assembly 
         /// </summary>
         /// <returns></returns>
-        private static string GetExtractDependenciesScript()
-        {
-            if (_scriptExtract == null)
-            {
+        private static string GetExtractDependenciesScript() {
+            if (_scriptExtract == null) {
                 var assembly = Assembly.GetExecutingAssembly();
                 var resourceName = "LogicReinc.BlendFarm.Server.extract_dependencies.py";
 
                 using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-                using (StreamReader reader = new StreamReader(stream))
-                {
+                using (StreamReader reader = new StreamReader(stream)) {
                     _scriptExtract = reader.ReadToEnd();
                 }
             }
@@ -763,29 +668,24 @@ namespace LogicReinc.BlendFarm.Server
         /// Creates a temporary text file with data
         /// Deleted after action is executed
         /// </summary>
-        private static void UseTemporaryFile(string data, Action<string> action)
-        {
+        private static void UseTemporaryFile(string data, Action<string> action) {
             string filePath = Path.GetFullPath(SystemInfo.RelativeToApplicationDirectory(Guid.NewGuid().ToString()));
-            try
-            {
+            try {
                 File.WriteAllText(filePath, data);
 
                 action(filePath);
-            }
-            finally
-            {
+            } finally {
                 File.Delete(filePath);
             }
         }
-    
-    
+
+
         /// <summary>
         /// Recursively copies directory dir to dest
         /// </summary>
         /// <param name="dir">Directory to copy</param>
         /// <param name="dest">Destination</param>
-        private static void CopyRecursive(string dir, string dest)
-        {
+        private static void CopyRecursive(string dir, string dest) {
             DirectoryInfo info = new DirectoryInfo(dir);
 
             if (!info.Exists)
@@ -795,15 +695,13 @@ namespace LogicReinc.BlendFarm.Server
 
             DirectoryInfo destInfo = new DirectoryInfo(dest);
 
-            foreach (FileInfo file in info.GetFiles())
-            {
+            foreach (FileInfo file in info.GetFiles()) {
                 string targetPath = Path.Combine(destInfo.FullName, file.Name);
                 Console.WriteLine($"[{file.FullName}] =>\n    [{targetPath}]");
                 file.CopyTo(targetPath);
             }
 
-            foreach (DirectoryInfo subInfo in info.GetDirectories())
-            {
+            foreach (DirectoryInfo subInfo in info.GetDirectories()) {
                 //Ignore empty paths in dmgs
                 if (subInfo.Name.Length == 0)
                     continue;
@@ -813,8 +711,7 @@ namespace LogicReinc.BlendFarm.Server
         }
 
 
-        internal static string FindOutput(string output)
-        {
+        internal static string FindOutput(string output) {
             string dir = Path.GetDirectoryName(output);
             output = Path.GetFileName(output);
 

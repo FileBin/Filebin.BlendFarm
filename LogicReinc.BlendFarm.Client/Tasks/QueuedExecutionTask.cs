@@ -4,16 +4,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Client.Tasks
-{
-    public abstract class QueuedExecutionTask : RenderTask
-    {
-        public QueuedExecutionTask(List<RenderNode> nodes, string session, string version, long fileId, RenderManagerSettings settings = null) : base(nodes, session, version, fileId, settings)
-        {
+namespace LogicReinc.BlendFarm.Client.Tasks {
+    public abstract class QueuedExecutionTask : RenderTask {
+        public QueuedExecutionTask(List<RenderNode> nodes, string session, string version, long fileId, RenderManagerSettings settings = null) : base(nodes, session, version, fileId, settings) {
         }
 
-        protected override async Task<bool> Execute()
-        {
+        protected override async Task<bool> Execute() {
             ChangeProgress(0);
 
             Setup();

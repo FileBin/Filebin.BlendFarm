@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Shared
-{
-    public enum RenderType
-    {
+namespace LogicReinc.BlendFarm.Shared {
+    public enum RenderType {
         CPU = 0,
         CUDA = 1,
         OPENCL = 2,
@@ -20,15 +18,13 @@ namespace LogicReinc.BlendFarm.Shared
         OPTIX = 11,
         OPTIX_GPUONLY = 12
     }
-    public enum EngineType
-    {
+    public enum EngineType {
         Cycles = 0,
         Eevee = 1,
         OptiX = 2
     }
 
-    public enum FormatType
-    {
+    public enum FormatType {
         Default = 0,
 
     }
@@ -37,8 +33,7 @@ namespace LogicReinc.BlendFarm.Shared
     /// Model used to transfer render settings between client and render node
     /// (SubTask => BlenderRenderSettings)
     /// </summary>
-    public class RenderPacketModel
-    {
+    public class RenderPacketModel {
         /// <summary>
         /// Identifier for Task
         /// </summary>

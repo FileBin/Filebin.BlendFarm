@@ -12,18 +12,18 @@ scn = bpy.context.scene
 
 try:
 
-    print("Files:\n");
+    print("Files:\n")
     for img in bpy.data.images:
         if(not img.packed_file and img.filepath):
             imgObj = dict(
                 Type = "Image",
                 Name = img.name,
                 Path = bpy.path.abspath(img.filepath)
-            );
-            print("SUCCESS:" + json.dumps(imgObj) + "\n");
+            )
+            print("SUCCESS:" + json.dumps(imgObj) + "\n")
 
 
 
 
 except Exception as e:
-    print("EXCEPTION:" + str(e));
+    print("EXCEPTION:" + str(e))

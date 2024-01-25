@@ -4,10 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LogicReinc.BlendFarm
-{
-    public static class LocalServer
-    {
+namespace LogicReinc.BlendFarm {
+    public static class LocalServer {
         private static RenderServer _server = null;
 
         public static BlenderManager Manager => _server?.Blender;
@@ -21,13 +19,11 @@ namespace LogicReinc.BlendFarm
         public static event Action<RenderServer, Exception> OnBroadcastException;
         public static event Action<string, string, int> OnDiscoveredServer;
 
-        public static void Start()
-        {
+        public static void Start() {
             if (Available)
                 return;
 
-            if (_server == null)
-            {
+            if (_server == null) {
                 _server = new RenderServer(ServerPort, BroadcastPort, false);
                 _server.OnServerException += (a, b) => OnServerException?.Invoke(a, b);
                 _server.OnBroadcastException += (a, b) => OnBroadcastException?.Invoke(a, b);
@@ -37,9 +33,8 @@ namespace LogicReinc.BlendFarm
 
         }
 
-        public static void Stop()
-        {
-            if(_server != null)
+        public static void Stop() {
+            if (_server != null)
                 _server.Stop();
         }
     }

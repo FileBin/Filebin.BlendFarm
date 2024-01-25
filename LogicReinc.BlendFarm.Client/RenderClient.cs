@@ -12,13 +12,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Client
-{
+namespace LogicReinc.BlendFarm.Client {
     /// <summary>
     /// Underlying client that handles communication
     /// </summary>
-    public class RenderClient
-    {
+    public class RenderClient {
         private int bufferSize = 1024;
 
         private CancellationToken _receivingToken = new CancellationToken();
@@ -40,27 +38,22 @@ namespace LogicReinc.BlendFarm.Client
         protected string _lastDisconnectReason = null;
 
 
-        public RenderClient(string address)
-        {
+        public RenderClient(string address) {
             string[] parts = address.Split(':');
             if (parts.Length != 2)
                 throw new ArgumentException("Address does not contain port..");
             Address = parts[0];
             Port = int.Parse(parts[1]);
         }
-        public RenderClient(string ip, int port)
-        {
+        public RenderClient(string ip, int port) {
             Address = ip;
             Port = port;
         }
 
-        public static async Task<RenderClient> Connect(string address)
-        {
+        public static async Task<RenderClient> Connect(string address) {
             RenderClient client = new RenderClient(address);
-            client.OnPacket += (packClient, pack) =>
-            {
-                if(pack is BlendFarmDisconnected packDis)
-                {
+            client.OnPacket += (packClient, pack) => {
+                if (pack is BlendFarmDisconnected packDis) {
                     client._lastDisconnectIsError = packDis.IsError;
                     client._lastDisconnectReason = packDis.Reason;
                 }
@@ -81,12 +74,10 @@ namespace LogicReinc.BlendFarm.Client
 
         #region Protocol
 
-        public void Send(BlendFarmMessage msg)
-        {
+        public void Send(BlendFarmMessage msg) {
             Socket.SendPacket(msg);
         }
-        public async Task<T> Send<T>(BlendFarmMessage msg, CancellationToken cancel) where T : BlendFarmMessage
-        {
+        public async Task<T> Send<T>(BlendFarmMessage msg, CancellationToken cancel) where T : BlendFarmMessage {
             string reqID = Guid.NewGuid().ToString();
 
             msg.RequestID = reqID;
@@ -96,8 +87,7 @@ namespace LogicReinc.BlendFarm.Client
             SemaphoreSlim sema = new SemaphoreSlim(1);
 
             //Releases on callback
-            _respHandlers.Add(reqID, (resp) =>
-            {
+            _respHandlers.Add(reqID, (resp) => {
                 response = resp;
                 sema.Release();
             });
@@ -113,17 +103,14 @@ namespace LogicReinc.BlendFarm.Client
             await sema.WaitAsync(cancel);
             sema.Dispose();
 
-            if (response is BlendFarmDisconnected respDisc)
-            {
-                if(string.IsNullOrEmpty(respDisc.Reason))
-                    throw new BlendFarmDisconnectedException()
-                    {
+            if (response is BlendFarmDisconnected respDisc) {
+                if (string.IsNullOrEmpty(respDisc.Reason))
+                    throw new BlendFarmDisconnectedException() {
                         IsError = respDisc.IsError,
                         Reason = respDisc.Reason
                     };
                 else
-                    throw new BlendFarmDisconnectedException(respDisc.Reason)
-                    {
+                    throw new BlendFarmDisconnectedException(respDisc.Reason) {
                         IsError = respDisc.IsError,
                         Reason = respDisc.Reason
                     };
@@ -132,44 +119,36 @@ namespace LogicReinc.BlendFarm.Client
             return (T)response;
         }
 
-        private void HandleConnected()
-        {
+        private void HandleConnected() {
             Connected = true;
             if (OnConnected != null)
                 OnConnected(this);
         }
-        private void HandleDisconnected()
-        {
+        private void HandleDisconnected() {
             Connected = false;
 
             OnDisconnected?.Invoke(this);
 
             foreach (var handler in _respHandlers.Values.ToList())
-                try
-                {
-                    handler(new BlendFarmDisconnected()
-                    {
+                try {
+                    handler(new BlendFarmDisconnected() {
                         IsError = _lastDisconnectIsError,
                         Reason = _lastDisconnectReason
                     });
-                }
-                catch { }
+                } catch { }
 
         }
         #endregion
 
 
-        public async Task<bool> Connect()
-        {
+        public async Task<bool> Connect() {
             //await Socket.ConnectAsync(new Uri(Address), CancellationToken.None);
             Socket = await TcpRenderClient.Connect(Address, Port);
-            Socket.OnMessage += (c, packetObj) =>
-            {
+            Socket.OnMessage += (c, packetObj) => {
                 if (OnPacket != null)
                     OnPacket(this, packetObj);
 
-                if (packetObj.ResponseID != null && _respHandlers.ContainsKey(packetObj.ResponseID))
-                {
+                if (packetObj.ResponseID != null && _respHandlers.ContainsKey(packetObj.ResponseID)) {
                     Action<BlendFarmMessage> respHandler = _respHandlers[packetObj.ResponseID];
                     _respHandlers.Remove(packetObj.ResponseID);
 
@@ -179,11 +158,10 @@ namespace LogicReinc.BlendFarm.Client
             Socket.OnDisconnected += (c) => HandleDisconnected();
 
             HandleConnected();
-            
+
             return true;
         }
-        public void Disconnect()
-        {
+        public void Disconnect() {
             Connected = false;
             _receivingToken.ThrowIfCancellationRequested();
             Socket.Disconnect();

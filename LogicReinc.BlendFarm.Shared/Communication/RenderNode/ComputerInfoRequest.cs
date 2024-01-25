@@ -2,17 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode
-{
+namespace LogicReinc.BlendFarm.Shared.Communication.RenderNode {
     //Packets for retrieving computer info
 
     [BlendFarmHeader("computerInfo")]
-    public class ComputerInfoRequest : BlendFarmMessage
-    {
+    public class ComputerInfoRequest : BlendFarmMessage {
     }
     [BlendFarmHeader("computerInfoResp")]
-    public class ComputerInfoResponse : BlendFarmMessage
-    {
+    public class ComputerInfoResponse : BlendFarmMessage {
         public string Name { get; set; }
         public int Cores { get; set; }
         public string OS { get; set; }

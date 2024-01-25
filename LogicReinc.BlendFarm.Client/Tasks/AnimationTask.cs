@@ -7,10 +7,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Client.Tasks
-{
-    public class AnimationTask : QueuedExecutionTask
-    {
+namespace LogicReinc.BlendFarm.Client.Tasks {
+    public class AnimationTask : QueuedExecutionTask {
         private object _lock = new object();
         private List<Exception> _exceptions;
 
@@ -22,36 +20,31 @@ namespace LogicReinc.BlendFarm.Client.Tasks
 
         public event Action<RenderSubTask, SubTaskResult> OnFrameResult;
 
-        public AnimationTask(List<RenderNode> nodes, string session, string version, long fileId, int start, int end, RenderManagerSettings settings = null) : base(nodes, session, version, fileId, settings)
-        {
+        public AnimationTask(List<RenderNode> nodes, string session, string version, long fileId, int start, int end, RenderManagerSettings settings = null) : base(nodes, session, version, fileId, settings) {
             StartFrame = start;
             EndFrame = end;
         }
 
-        protected override void Setup()
-        {
+        protected override void Setup() {
             _exceptions = new List<Exception>();
 
             _finished = 0;
             _framesTotal = EndFrame - StartFrame + 1;
         }
 
-        protected override RenderSubTask[] GetTasks()
-        {
+        protected override RenderSubTask[] GetTasks() {
             List<RenderSubTask> tasks = new List<RenderSubTask>();
             for (int i = StartFrame; i <= EndFrame; i++)
                 tasks.Add(new RenderSubTask(this, 0, 1, 0, 1, i));
             return tasks.ToArray();
         }
 
-        protected override void Roundup()
-        {
+        protected override void Roundup() {
             if (_finished != _framesTotal)
                 throw new AggregateException($"Not all frames rendered ({_finished}/{_framesTotal})", _exceptions);
         }
 
-        protected override void HandleResult(RenderSubTask task, SubTaskResult result)
-        {
+        protected override void HandleResult(RenderSubTask task, SubTaskResult result) {
             lock (_lock)
                 _finished++;
 

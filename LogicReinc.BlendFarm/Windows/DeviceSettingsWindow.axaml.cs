@@ -9,19 +9,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using static LogicReinc.BlendFarm.BlendFarmSettings;
 
-namespace LogicReinc.BlendFarm.Windows
-{
-    public class DeviceSettingsWindow : Window
-    {
+namespace LogicReinc.BlendFarm.Windows {
+    public class DeviceSettingsWindow : Window {
         private ComboBox selectRenderType = null;
 
         public RenderType[] RenderTypes { get; } = (RenderType[])Enum.GetValues(typeof(RenderType));
         public RenderNode Node { get; set; }
 
-        public DeviceSettingsWindow()
-        {
-            Node = new RenderNode()
-            {
+        public DeviceSettingsWindow() {
+            Node = new RenderNode() {
                 Name = "Some Device Name",
                 Activity = "SomeActivity",
                 Cores = 16,
@@ -33,15 +29,13 @@ namespace LogicReinc.BlendFarm.Windows
             DataContext = this;
             this.InitializeComponent();
         }
-        public DeviceSettingsWindow(RenderNode node)
-        {
+        public DeviceSettingsWindow(RenderNode node) {
             Node = node;
             DataContext = this;
             this.InitializeComponent();
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             AvaloniaXamlLoader.Load(this);
             selectRenderType = this.Find<ComboBox>("selectRenderType");
             selectRenderType.SelectedItem = Node.RenderType;
@@ -54,17 +48,13 @@ namespace LogicReinc.BlendFarm.Windows
         }
 
 
-        public async void Save()
-        {
+        public async void Save() {
             HistoryClient entry = BlendFarmSettings.Instance.PastClients?.FirstOrDefault(x => x.Key == Node.Name).Value;
-            if(entry == null)
-            {
+            if (entry == null) {
                 if (!await YesNoWindow.Show(this, "Node not saved yet", "The node was not yet saved, would you like to save it?"))
                     return;
-                else
-                {
-                    entry = new HistoryClient()
-                    {
+                else {
+                    entry = new HistoryClient() {
                         Name = Node.Name,
                         Address = Node.Address,
                         RenderType = Node.RenderType,
@@ -79,8 +69,7 @@ namespace LogicReinc.BlendFarm.Windows
             BlendFarmSettings.Instance.Save();
         }
 
-        public static async Task Show(Window owner, RenderNode node)
-        {
+        public static async Task Show(Window owner, RenderNode node) {
             var window = new DeviceSettingsWindow(node);
 
             window.Position = new PixelPoint((int)(owner.Position.X + ((owner.Width / 2) - window.Width / 2)), (int)(owner.Position.Y + ((owner.Height / 2) - window.Height / 2)));

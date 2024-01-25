@@ -4,10 +4,8 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 
-namespace LogicReinc.BlendFarm.Server
-{
-    public class ServerSettings
-    {
+namespace LogicReinc.BlendFarm.Server {
+    public class ServerSettings {
         private const string SETTINGS_PATH = "ServerSettings";
 
         /// <summary>
@@ -47,22 +45,18 @@ namespace LogicReinc.BlendFarm.Server
 
         #region Boilerplate
         private static ServerSettings _instance = null;
-        public static ServerSettings Instance
-        {
-            get
-            {
+        public static ServerSettings Instance {
+            get {
                 if (_instance == null)
                     _instance = Load();
                 return _instance;
             }
         }
 
-        public void Save()
-        {
+        public void Save() {
             File.WriteAllText(SystemInfo.RelativeToApplicationDirectory(SETTINGS_PATH), JsonSerializer.Serialize(this));
         }
-        public static ServerSettings Load()
-        {
+        public static ServerSettings Load() {
             string path = SystemInfo.RelativeToApplicationDirectory(SETTINGS_PATH);
             if (File.Exists(path))
                 return JsonSerializer.Deserialize<ServerSettings>(File.ReadAllText(path));

@@ -6,40 +6,33 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Client.Tasks
-{
-    public class ChunkedTask : QueuedExecutionTask, IImageTask
-    {
+namespace LogicReinc.BlendFarm.Client.Tasks {
+    public class ChunkedTask : QueuedExecutionTask, IImageTask {
         private object _drawLock = new object();
         private Bitmap result;
         private Graphics g;
 
         public Image FinalImage { get; private set; }
 
-        public ChunkedTask(List<RenderNode> nodes, string session, string version, long fileId, RenderManagerSettings settings = null) : base(nodes, session, version, fileId, settings)
-        {
+        public ChunkedTask(List<RenderNode> nodes, string session, string version, long fileId, RenderManagerSettings settings = null) : base(nodes, session, version, fileId, settings) {
         }
 
-        protected override void Setup()
-        {
+        protected override void Setup() {
             result = new Bitmap(Settings.OutputWidth, Settings.OutputHeight);
             g = Graphics.FromImage(result);
         }
-        protected override RenderSubTask[] GetTasks()
-        {
+        protected override RenderSubTask[] GetTasks() {
             return GetTaskQueueInOrder(GetChunkedSubTasks(), Settings.Order);
         }
 
-        protected override void Roundup()
-        {
+        protected override void Roundup() {
             if (g != null)
                 g.Dispose();
 
             FinalImage = result;
         }
 
-        protected override void HandleResult(RenderSubTask task, SubTaskResult tresult)
-        {
+        protected override void HandleResult(RenderSubTask task, SubTaskResult tresult) {
             ChangeProgress(Progress + task.Value);
             using (Image img = ImageConverter.Convert(tresult.Image, task.Parent.Settings.RenderFormat))
                 ProcessTile(task, img, ref g, ref result, ref _drawLock);
@@ -49,8 +42,7 @@ namespace LogicReinc.BlendFarm.Client.Tasks
         /// <summary>
         /// Splits up file into subtasks based on Settings.ChunkWidth/Height
         /// </summary>
-        private List<RenderSubTask> GetChunkedSubTasks(decimal overlap = 0.003m)
-        {
+        private List<RenderSubTask> GetChunkedSubTasks(decimal overlap = 0.003m) {
             decimal blockSizeX = Settings.ChunkWidth;
             decimal blockSizeY = Settings.ChunkHeight;
             if (blockSizeX <= 0m)
@@ -64,8 +56,7 @@ namespace LogicReinc.BlendFarm.Client.Tasks
 
 
             //This workaround strategy requires equal size tiles..
-            if (Settings.Strategy == RenderStrategy.SplitChunked && Settings.BlenderUpdateBugWorkaround)
-            {
+            if (Settings.Strategy == RenderStrategy.SplitChunked && Settings.BlenderUpdateBugWorkaround) {
                 int tileXPix = (int)Math.Floor(Settings.OutputWidth * Settings.ChunkWidth);
                 int tileYPix = (int)Math.Floor(Settings.OutputHeight * Settings.ChunkHeight);
 
@@ -79,8 +70,7 @@ namespace LogicReinc.BlendFarm.Client.Tasks
             List<RenderSubTask> tasks = new List<RenderSubTask>();
 
             for (int x = 0; x < tilesHorizontal; x++)
-                for (int y = 0; y < tilesVertical; y++)
-                {
+                for (int y = 0; y < tilesVertical; y++) {
                     decimal startX = x * blockSizeX;
                     decimal endX = Math.Min(1, (x + 1) * blockSizeX);
                     decimal startY = y * blockSizeY;
@@ -105,15 +95,12 @@ namespace LogicReinc.BlendFarm.Client.Tasks
         /// <summary>
         /// Creates a queue from a list of subtasks based on the provided order (eg. Center)
         /// </summary>
-        private RenderSubTask[] GetTaskQueueInOrder(List<RenderSubTask> queue, TaskOrder order)
-        {
+        private RenderSubTask[] GetTaskQueueInOrder(List<RenderSubTask> queue, TaskOrder order) {
             RenderSubTask[] newOrder;
 
-            switch (order)
-            {
+            switch (order) {
                 case TaskOrder.Center:
-                    newOrder = queue.OrderBy(x =>
-                    {
+                    newOrder = queue.OrderBy(x => {
 
                         decimal posX = x.X + (x.X2 - x.X) / 2;
                         decimal posY = x.Y + (x.Y2 - x.Y) / 2;

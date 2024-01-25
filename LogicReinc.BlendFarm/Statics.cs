@@ -7,27 +7,20 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm
-{
-    public static class Statics
-    {
+namespace LogicReinc.BlendFarm {
+    public static class Statics {
         private static object _previewImageLock = new object();
         private static Avalonia.Media.Imaging.Bitmap _noPreviewImage { get; set; }
-        public static Avalonia.Media.Imaging.Bitmap NoPreviewImage
-        {
-            get
-            {
-                lock (_previewImageLock)
-                {
-                    if (_noPreviewImage == null)
-                    {
+        public static Avalonia.Media.Imaging.Bitmap NoPreviewImage {
+            get {
+                lock (_previewImageLock) {
+                    if (_noPreviewImage == null) {
                         System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(700, 200);
-                        using(System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp))
-                        {
-                            g.DrawString("Could not generate Preview\n(Some Render Formats do not support preview)", 
-                                new System.Drawing.Font("Arial", 16), 
+                        using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp)) {
+                            g.DrawString("Could not generate Preview\n(Some Render Formats do not support preview)",
+                                new System.Drawing.Font("Arial", 16),
                                 new System.Drawing.SolidBrush(System.Drawing.Color.Gray),
-                                5,5);
+                                5, 5);
                         }
                         _noPreviewImage = bmp.ToAvaloniaBitmap();
                     }
@@ -36,8 +29,7 @@ namespace LogicReinc.BlendFarm
             }
         }
 
-        public static string SanitizePath(string inputPath)
-        {
+        public static string SanitizePath(string inputPath) {
             if (inputPath == null)
                 return inputPath;
 
@@ -48,11 +40,9 @@ namespace LogicReinc.BlendFarm
             return inputPath;
         }
 
-        public static Bitmap ToAvaloniaBitmap(this System.Drawing.Image bitmap)
-        {
+        public static Bitmap ToAvaloniaBitmap(this System.Drawing.Image bitmap) {
             //TODO: This needs to be better..
-            using (MemoryStream str = new MemoryStream())
-            {
+            using (MemoryStream str = new MemoryStream()) {
                 bitmap.Save(str, ImageFormat.Png);
                 str.Position = 0;
                 return new Bitmap(str);

@@ -18,10 +18,10 @@ import json
 import time
 from multiprocessing import cpu_count
 
-isPre3 = bpy.app.version < (3,0,0);
+isPre3 = bpy.app.version < (3,0,0)
 
 if(isPre3):
-    print('Detected Blender >= 3.0.0\n');
+    print('Detected Blender >= 3.0.0\n')
 
 argv = sys.argv
 argv = argv[argv.index("--") + 1:]
@@ -29,14 +29,14 @@ argv = argv[argv.index("--") + 1:]
 scn = bpy.context.scene
 
 jsonPathInitial = argv[0];
-useContinue = len(argv) > 1 and argv[1] == 'True';
+useContinue = len(argv) > 1 and argv[1] == 'True'
 
 if(useContinue):
-    print('Continuation enabled\n');
+    print('Continuation enabled\n')
     
 
 def useDevices(type, allowGPU, allowCPU):
-    cyclesPref = bpy.context.preferences.addons["cycles"].preferences;
+    cyclesPref = bpy.context.preferences.addons["cycles"].preferences
     
     #For older Blender Builds
     if (isPre3):
@@ -47,14 +47,14 @@ def useDevices(type, allowGPU, allowCPU):
         
         devices = None;
         if(type == "CUDA"):
-            devices = cuda_devices;
+            devices = cuda_devices
         elif(type == "OPTIX"):
-            devices = cuda_devices;
+            devices = cuda_devices
         else:
-            devices = opencl_devices;
+            devices = opencl_devices
         for d in devices:
             d.use = (allowCPU and d.type == "CPU") or (allowGPU and d.type != "CPU");
-            print(type + " Device:", d["name"], d["use"]);
+            print(type + " Device:", d["name"], d["use"])
     #For Blender Builds >= 3.0
     else:
         cyclesPref.compute_device_type = type

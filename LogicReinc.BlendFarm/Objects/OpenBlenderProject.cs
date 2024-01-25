@@ -7,11 +7,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Objects
-{
-
-    public class OpenBlenderProject : INotifyPropertyChanged
-    {
+namespace LogicReinc.BlendFarm.Objects {
+    public class OpenBlenderProject : INotifyPropertyChanged {
         public string SessionID { get; set; } = Guid.NewGuid().ToString();
         public string FileID { get; set; } = Guid.NewGuid().ToString();
         public string BlendFile { get; set; }
@@ -19,14 +16,11 @@ namespace LogicReinc.BlendFarm.Objects
 
         //Networked Path
         private bool _useNetworkedPath = false;
-        public bool UseNetworkedPath
-        {
-            get
-            {
+        public bool UseNetworkedPath {
+            get {
                 return _useNetworkedPath;
             }
-            set
-            {
+            set {
                 bool changed = _useNetworkedPath != value;
                 _useNetworkedPath = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseNetworkedPath)));
@@ -56,11 +50,9 @@ namespace LogicReinc.BlendFarm.Objects
         public int FrameEnd { get; set; } = 60;
         public int FPS { get; set; } = 0;
         private bool _useFPS = false;
-        public bool UseFPS
-        {
+        public bool UseFPS {
             get => _useFPS;
-            set
-            {
+            set {
                 bool old = _useFPS;
                 _useFPS = value;
                 //RaisePropertyChanged(UseFPSProperty, old, value);
@@ -68,14 +60,11 @@ namespace LogicReinc.BlendFarm.Objects
         }
 
         private Bitmap _lastImage = null;
-        public Bitmap LastImage
-        {
-            get
-            {
+        public Bitmap LastImage {
+            get {
                 return _lastImage;
             }
-            set
-            {
+            set {
                 _lastImage = value;
                 OnBitmapChanged?.Invoke(this, value);
             }
@@ -94,51 +83,41 @@ namespace LogicReinc.BlendFarm.Objects
         public event Action<OpenBlenderProject, Bitmap> OnBitmapChanged;
         public event Action<OpenBlenderProject, bool> OnNetworkedChanged;
         public event PropertyChangedEventHandler PropertyChanged;
-        public OpenBlenderProject(string blendfile, string sessionID = null)
-        {
+        public OpenBlenderProject(string blendfile, string sessionID = null) {
             BlendFile = blendfile;
             if (sessionID != null)
                 SessionID = sessionID;
 
-            if (BlendFarmSettings.Instance.UISettings != null)
-            {
-                try
-                {
+            if (BlendFarmSettings.Instance.UISettings != null) {
+                try {
                     ApplyUISettings(BlendFarmSettings.Instance.UISettings);
-                }
-                catch(Exception ex)
-                {
+                } catch (Exception ex) {
                     Console.WriteLine($"Failed to apply default settings..due to {ex.Message}. Ignoring defaults");
                 }
             }
         }
 
-        public void SetRenderTask(RenderTask task)
-        {
+        public void SetRenderTask(RenderTask task) {
             CurrentTask = task;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTask)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRendering)));
         }
 
-        public void SetWindowsNetworkPath(string path)
-        {
+        public void SetWindowsNetworkPath(string path) {
             NetworkPathWindows = path;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NetworkPathWindows)));
         }
-        public void SetLinuxNetworkPath(string path)
-        {
+        public void SetLinuxNetworkPath(string path) {
             NetworkPathLinux = path;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NetworkPathLinux)));
         }
-        public void SetMacOSNetworkPath(string path)
-        {
+        public void SetMacOSNetworkPath(string path) {
             NetworkPathMacOS = path;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NetworkPathMacOS)));
         }
 
 
-        public void ApplyUISettings(UISettings settings)
-        {
+        public void ApplyUISettings(UISettings settings) {
             FrameStart = settings?.FrameStart ?? 0;
             FrameEnd = settings?.FrameEnd ?? 60;
             RenderHeight = settings?.RenderHeight ?? 1280;
@@ -149,10 +128,8 @@ namespace LogicReinc.BlendFarm.Objects
             FPS = settings?.FPS ?? 0;
             Samples = settings?.Samples ?? 32;
         }
-        public void SaveAsDefault()
-        {
-            BlendFarmSettings.Instance.UISettings = new UISettings()
-            {
+        public void SaveAsDefault() {
+            BlendFarmSettings.Instance.UISettings = new UISettings() {
                 FrameStart = FrameStart,
                 FrameEnd = FrameEnd,
                 RenderHeight = RenderHeight,
@@ -167,18 +144,15 @@ namespace LogicReinc.BlendFarm.Objects
         }
 
 
-        public BlendFarmSettings.UIProjectSettings GetProjectSettings()
-        {
-            return new BlendFarmSettings.UIProjectSettings()
-            {
+        public BlendFarmSettings.UIProjectSettings GetProjectSettings() {
+            return new BlendFarmSettings.UIProjectSettings() {
                 UseNetworked = UseNetworkedPath,
                 NetworkPathWindows = NetworkPathWindows,
                 NetworkPathLinux = NetworkPathLinux,
                 NetworkPathMacOS = NetworkPathMacOS
             };
         }
-        public void ApplyProjectSettings(BlendFarmSettings.UIProjectSettings sets)
-        {
+        public void ApplyProjectSettings(BlendFarmSettings.UIProjectSettings sets) {
             UseNetworkedPath = sets.UseNetworked;
             NetworkPathWindows = sets.NetworkPathWindows ?? NetworkPathWindows;
             NetworkPathLinux = sets.NetworkPathLinux ?? NetworkPathLinux;
@@ -186,14 +160,12 @@ namespace LogicReinc.BlendFarm.Objects
         }
 
 
-        internal void TriggerPropertyChange(params string[] props)
-        {
-            foreach(string prop in props)
+        internal void TriggerPropertyChange(params string[] props) {
+            foreach (string prop in props)
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
-        public class UISettings
-        {
+        public class UISettings {
             public int FrameStart { get; set; }
             public int FrameEnd { get; set; }
             public int RenderHeight { get; set; }

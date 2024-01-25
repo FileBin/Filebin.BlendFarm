@@ -4,13 +4,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Client
-{
+namespace LogicReinc.BlendFarm.Client {
     /// <summary>
     /// Settings describing how render
     /// </summary>
-    public class RenderManagerSettings
-    {
+    public class RenderManagerSettings {
         /// <summary>
         /// How to render among nodes
         /// </summary>
@@ -48,7 +46,7 @@ namespace LogicReinc.BlendFarm.Client
         /// <summary>
         /// Chunk Height (0..1), used when render is divided into chunks (Chunked, SplitChunked)
         /// </summary>
-        public decimal ChunkHeight { get; set; } = Math.Round(((decimal)(256) / 1080),4); //0.066
+        public decimal ChunkHeight { get; set; } = Math.Round(((decimal)(256) / 1080), 4); //0.066
         /// <summary>
         /// Chunk Width (0..1), used when render is divided into chunks (Chunked, SplitChunked)
         /// </summary>
@@ -98,15 +96,13 @@ namespace LogicReinc.BlendFarm.Client
         public RenderPacketModel Render { get; set; }
     }
 
-    public enum RenderStrategy
-    {
+    public enum RenderStrategy {
         SplitHorizontal = 0,
         SplitVertical = 3,
         Chunked = 1,
         SplitChunked = 2
     }
-    public enum TaskOrder
-    {
+    public enum TaskOrder {
         Default = 0,
         Center = 1
     }

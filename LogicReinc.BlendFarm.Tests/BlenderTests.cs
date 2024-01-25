@@ -5,14 +5,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace LogicReinc.BlendFarm.Tests
-{
+namespace LogicReinc.BlendFarm.Tests {
     /// <summary>
     /// Tests for rendering directly (no manager)
     /// </summary>
     [TestClass]
-    public class BlenderTests
-    {
+    public class BlenderTests {
         private static string BLEND_FILE = "BlendFarmDemo.blend";
         private static string BLEND_VERSION = "blender-2.91.0";
 
@@ -24,26 +22,22 @@ namespace LogicReinc.BlendFarm.Tests
         private static StringWriter _writer = new StringWriter();
 
         [ClassInitialize]
-        public static void Init(TestContext context)
-        {
+        public static void Init(TestContext context) {
             Directory.CreateDirectory(RESULTS_DIRECTORY);
 
         }
         [ClassCleanup]
-        public static void Cleanup()
-        {
+        public static void Cleanup() {
         }
 
         [TestMethod]
-        public void RenderTest1()
-        {
+        public void RenderTest1() {
             if (WRITE_LOGS)
                 Console.SetOut(_writer);
 
             Blender.Prepare(BLEND_VERSION);
 
-            string result = Blender.Render(BLEND_VERSION, BLEND_FILE, new BlenderRenderSettings()
-            {
+            string result = Blender.Render(BLEND_VERSION, BLEND_FILE, new BlenderRenderSettings() {
                 Width = 1920 / 4,
                 Height = 1080 / 4,
                 ComputeUnit = Shared.RenderType.CPU,

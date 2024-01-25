@@ -5,17 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Windows
-{
-    public enum YesNoNever
-    {
+namespace LogicReinc.BlendFarm.Windows {
+    public enum YesNoNever {
         Yes,
         No,
         Always,
         Never
     }
-    public class YesNoNeverWindow : Window
-    {
+    public class YesNoNeverWindow : Window {
         private static Dictionary<string, bool> neverResponses = new Dictionary<string, bool>();
 
         public string MsgTitle { get; set; }
@@ -24,19 +21,16 @@ namespace LogicReinc.BlendFarm.Windows
         public bool Response { get; set; } = false;
         public bool Never { get; set; } = false;
 
-        public YesNoNeverWindow(string title, string desc)
-        {
+        public YesNoNeverWindow(string title, string desc) {
             MsgTitle = title;
             Description = desc;
             Init();
         }
-        public YesNoNeverWindow()
-        {
+        public YesNoNeverWindow() {
             Init();
         }
 
-        public void Init()
-        {
+        public void Init() {
             this.DataContext = this;
             Height = 200;
             Width = 500;
@@ -49,39 +43,34 @@ namespace LogicReinc.BlendFarm.Windows
             this.InitializeComponent();
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             AvaloniaXamlLoader.Load(this);
         }
 
 
-        public void TriggerYes()
-        {
+        public void TriggerYes() {
             Response = true;
             this.Close();
         }
 
-        public void TriggerNo()
-        {
+        public void TriggerNo() {
             Response = false;
             this.Close();
         }
 
-        public static async Task<YesNoNever> Show(Window owner, string title, string desc)
-        {
+        public static async Task<YesNoNever> Show(Window owner, string title, string desc) {
             var window = new YesNoNeverWindow(title, desc);
 
             window.Position = new PixelPoint((int)(owner.Position.X + ((owner.Width / 2) - window.Width / 2)), (int)(owner.Position.Y + ((owner.Height / 2) - window.Height / 2)));
 
             await window.ShowDialog(owner);
 
-            if(window.Never)
+            if (window.Never)
                 return (window.Response) ? YesNoNever.Always : YesNoNever.Never;
             else
                 return (window.Response) ? YesNoNever.Yes : YesNoNever.No;
         }
-        public static async Task<bool> Show(Window owner, string title, string desc, string rememberID)
-        {
+        public static async Task<bool> Show(Window owner, string title, string desc, string rememberID) {
             if (rememberID == null)
                 throw new ArgumentNullException(nameof(rememberID));
 
@@ -90,8 +79,7 @@ namespace LogicReinc.BlendFarm.Windows
 
             YesNoNever resp = await Show(owner, title, desc);
 
-            switch (resp)
-            {
+            switch (resp) {
                 case YesNoNever.Always:
                     neverResponses.Add(rememberID, true);
                     return true;

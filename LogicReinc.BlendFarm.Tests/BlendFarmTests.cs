@@ -8,21 +8,18 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogicReinc.BlendFarm.Tests
-{
+namespace LogicReinc.BlendFarm.Tests {
     /// <summary>
     /// Tests for top-level manager
     /// TODO: Has to be split out
     /// REQUIRES INDIVIDUAL RUNS
     /// </summary>
     [TestClass]
-    public class BlendFarmTests
-    {
+    public class BlendFarmTests {
         private static bool REMOVE_BLENDER = false;
         private static bool REMOVE_RESULTS = false;
 
@@ -42,8 +39,7 @@ namespace LogicReinc.BlendFarm.Tests
         public static BlendFarmManager manager = null;
 
         [ClassInitialize]
-        public static void Init(TestContext context)
-        {
+        public static void Init(TestContext context) {
             blender = new BlenderManager();
             server = new RenderServer(PORT, -1, true);
             manager = new BlendFarmManager(BLEND_FILE, BLEND_VERSION);
@@ -54,49 +50,37 @@ namespace LogicReinc.BlendFarm.Tests
                 Directory.CreateDirectory(RESULTS_DIRECTORY);
         }
         [ClassCleanup]
-        public static void Cleanup()
-        {
+        public static void Cleanup() {
             manager.DisconnectAll();
             server.Stop();
 
-            if (REMOVE_BLENDER)
-            {
-                try
-                {
+            if (REMOVE_BLENDER) {
+                try {
                     if (Directory.Exists(blender.BlenderData))
                         Directory.Delete(blender.BlenderData, true);
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
 
                 }
             }
-            try
-            {
+            try {
                 if (Directory.Exists(blender.RenderData))
                     Directory.Delete(blender.RenderData, true);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
 
             }
-            try
-            {
+            try {
                 if (Directory.Exists(blender.RenderData))
                     Directory.Delete(blender.RenderData, true);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
 
             }
 
-            if (REMOVE_RESULTS &&  Directory.Exists(RESULTS_DIRECTORY))
+            if (REMOVE_RESULTS && Directory.Exists(RESULTS_DIRECTORY))
                 Directory.Delete(RESULTS_DIRECTORY, true);
         }
 
         [TestMethod]
-        public async Task BasicConnect()
-        {
+        public async Task BasicConnect() {
             manager.AddNode(THIS_NAME, THIS_ADDRESS);
 
             RenderNode node = await manager.Connect(THIS_NAME);
@@ -108,8 +92,7 @@ namespace LogicReinc.BlendFarm.Tests
         }
 
         [TestMethod]
-        public async Task Prepare()
-        {
+        public async Task Prepare() {
             await BasicConnect();
 
             RenderNode node = manager.GetNodeByName(THIS_NAME);
@@ -120,8 +103,7 @@ namespace LogicReinc.BlendFarm.Tests
         }
 
         [TestMethod]
-        public async Task Sync()
-        {
+        public async Task Sync() {
             await BasicConnect();
 
             RenderNode node = manager.GetNodeByName(THIS_NAME);
@@ -135,8 +117,7 @@ namespace LogicReinc.BlendFarm.Tests
             Assert.IsTrue(resp.Success);
         }
         [TestMethod]
-        public async Task SyncCompressed()
-        {
+        public async Task SyncCompressed() {
             await BasicConnect();
 
             RenderNode node = manager.GetNodeByName(THIS_NAME);
@@ -146,8 +127,7 @@ namespace LogicReinc.BlendFarm.Tests
             SyncResponse resp = null;
             using (MemoryStream str = new MemoryStream())
             using (GZipStream zip = new GZipStream(str, CompressionMode.Compress))
-            using (FileStream stream = new FileStream(BLEND_FILE, FileMode.Open))
-            {
+            using (FileStream stream = new FileStream(BLEND_FILE, FileMode.Open)) {
                 byte[] buffer = new byte[4096];
                 int read = 0;
                 while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
@@ -161,8 +141,7 @@ namespace LogicReinc.BlendFarm.Tests
 
 
         [TestMethod]
-        public async Task Render()
-        {
+        public async Task Render() {
             await Prepare();
 
             RenderNode node = manager.GetNodeByName(THIS_NAME);
@@ -174,14 +153,12 @@ namespace LogicReinc.BlendFarm.Tests
             Assert.IsTrue(respSync.Success);
 
 
-            RenderResponse respRender = await node.Render(new RenderRequest()
-            {
+            RenderResponse respRender = await node.Render(new RenderRequest() {
                 FileID = lastFileChange,
                 SessionID = SESSION,
                 TaskID = "Whatever",
                 Version = BLEND_VERSION,
-                Settings = new Shared.RenderPacketModel()
-                {
+                Settings = new Shared.RenderPacketModel() {
                     Width = 640,
                     Height = 360,
                     Samples = 8
@@ -194,8 +171,7 @@ namespace LogicReinc.BlendFarm.Tests
             //Check equality
         }
 
-        private async Task PrepareManagedRender()
-        {
+        private async Task PrepareManagedRender() {
             manager.AddNode(THIS_NAME, THIS_ADDRESS);
             await manager.ConnectAll();
 
@@ -206,8 +182,7 @@ namespace LogicReinc.BlendFarm.Tests
         }
 
         [TestMethod]
-        public async Task Render_Managed_Split()
-        {
+        public async Task Render_Managed_Split() {
             Stopwatch watch = new Stopwatch();
             watch.Start();
 
@@ -217,14 +192,12 @@ namespace LogicReinc.BlendFarm.Tests
             watch.Restart();
 
             int render = 0;
-            Bitmap final = await manager.Render(BLEND_FILE, new RenderManagerSettings()
-            {
+            Bitmap final = (Bitmap)await manager.Render(BLEND_FILE, new RenderManagerSettings() {
                 OutputWidth = 640,
                 OutputHeight = 360,
                 Strategy = RenderStrategy.SplitHorizontal,
                 Samples = 8
-            }, (task, bitmap) =>
-            {
+            }, (task, bitmap) => {
                 bitmap.Save($"{RESULTS_DIRECTORY}/Test.Render_Managed_Split.{render}.png");
             });
             long renderTime = watch.ElapsedMilliseconds;
@@ -239,8 +212,7 @@ namespace LogicReinc.BlendFarm.Tests
         }
 
         [TestMethod]
-        public async Task Render_Managed_Chunked()
-        {
+        public async Task Render_Managed_Chunked() {
             Stopwatch watch = new Stopwatch();
             watch.Start();
 
@@ -252,8 +224,7 @@ namespace LogicReinc.BlendFarm.Tests
             int render = 0;
 
             bool gotBitmap = false;
-            Bitmap final = await manager.Render(BLEND_FILE, new RenderManagerSettings()
-            {
+            Bitmap final = (Bitmap)await manager.Render(BLEND_FILE, new RenderManagerSettings() {
                 Strategy = RenderStrategy.Chunked,
                 ChunkHeight = 1,
                 ChunkWidth = 0.5m,
@@ -261,8 +232,7 @@ namespace LogicReinc.BlendFarm.Tests
                 OutputHeight = 360,
                 Samples = 8
             }, null,
-            (task, bitmap) =>
-            {
+            (task, bitmap) => {
                 bitmap.Save($"{RESULTS_DIRECTORY}/Test.Render_Managed_Chunked.Tile.{render++}.png");
                 gotBitmap = true;
             });
@@ -281,8 +251,7 @@ namespace LogicReinc.BlendFarm.Tests
         }
 
         [TestMethod]
-        public async Task Render_Managed_SplitChunked()
-        {
+        public async Task Render_Managed_SplitChunked() {
             Stopwatch watch = new Stopwatch();
             watch.Start();
 
@@ -294,8 +263,7 @@ namespace LogicReinc.BlendFarm.Tests
             int render = 0;
 
             bool gotBitmap = false;
-            Bitmap final = await manager.Render(BLEND_FILE, new RenderManagerSettings()
-            {
+            Bitmap final = (Bitmap)await manager.Render(BLEND_FILE, new RenderManagerSettings() {
                 Strategy = RenderStrategy.SplitChunked,
                 ChunkHeight = 1,
                 ChunkWidth = 0.25m,
@@ -303,8 +271,7 @@ namespace LogicReinc.BlendFarm.Tests
                 OutputHeight = 360,
                 Samples = 8
             }, null,
-            (task, bitmap) =>
-            {
+            (task, bitmap) => {
                 bitmap.Save($"{RESULTS_DIRECTORY}/Test.Render_Managed_SplitChunked.Tile.{render++}.png");
                 gotBitmap = true;
             });
@@ -321,23 +288,5 @@ namespace LogicReinc.BlendFarm.Tests
             Assert.IsNotNull(final);
             Assert.IsTrue(gotBitmap);
         }
-
-
-        /*
-        [TestMethod]
-        public async Task Render_Testing()
-        {
-            await PrepareManagedRender();
-
-            Bitmap final = await manager.Render(new RenderManagerSettings()
-            {
-                Strategy = RenderStrategy.Chunked,
-                Width = 1920,
-                Height = 1080
-            }, null);
-
-
-            final.Save("result.png");
-        }*/
     }
 }

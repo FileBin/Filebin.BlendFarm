@@ -7,17 +7,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
-namespace LogicReinc.BlendFarm.Windows
-{
-    public partial class AnnouncementWindow : Window, INotifyPropertyChanged
-    {
+namespace LogicReinc.BlendFarm.Windows {
+    public partial class AnnouncementWindow : Window, INotifyPropertyChanged {
         public Announcement Announcement { get; set; }
         public List<Announcement> Announcements { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public AnnouncementWindow()
-        {
+        public AnnouncementWindow() {
             Announcements = new List<Announcement>()
             {
                 new Announcement()
@@ -72,8 +69,7 @@ namespace LogicReinc.BlendFarm.Windows
 
             InitializeComponent();
         }
-        public AnnouncementWindow(List<Announcement> announcements)
-        {
+        public AnnouncementWindow(List<Announcement> announcements) {
             Announcements = announcements?.OrderByDescending(x => x.Date).ToList();
             Announcement = announcements?.FirstOrDefault();
             DataContext = this;
@@ -81,8 +77,7 @@ namespace LogicReinc.BlendFarm.Windows
             InitializeComponent();
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             AvaloniaXamlLoader.Load(this);
             int width = 600;
             int height = 700;
@@ -96,10 +91,8 @@ namespace LogicReinc.BlendFarm.Windows
 
             Title = "Announcements";
 
-            this.Find<ComboBox>("announcementSelection").SelectionChanged += (a, b) =>
-            {
-                if (b.AddedItems.Count > 0)
-                {
+            this.Find<ComboBox>("announcementSelection").SelectionChanged += (a, b) => {
+                if (b.AddedItems.Count > 0) {
                     Announcement = b.AddedItems[0] as Announcement;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Announcement)));
                 }
