@@ -2,12 +2,12 @@
 
 ```alias man=LogicReinc```
 
-I know that ```$man``` made a big work to write this application to give opportunity for people render on their hardware at home but i wanna make a short diss about ```$man``` because
+I know that ```$man``` made a big work to write this application to give opportunity for people render on their hardware at home and also part of project with networking is kinda cool but i wanna make a short diss as a joke about ```$man``` because
 
 I use arch btw and I hate:
  * When opening brace is on new line (Bruh)
  * When enums are "strings" (```$man``` it's not JavaScript)
- * When interface is written in single thread with large tasks
+ * When interface is laggy
  * When farm doesn't care if node dies (```$man``` whyyyyyyyyyyyy????)
 
 And I want to implement:

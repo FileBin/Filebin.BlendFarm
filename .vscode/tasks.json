@@ -4,11 +4,13 @@
         {
             "label": "Build Filebin.BlendFarm.GUI",
             "command": "dotnet",
-            "type": "process",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "args": [
                 "build",
                 "${workspaceFolder}/LogicReinc.BlendFarm/LogicReinc.BlendFarm.csproj",
-                "/property:GenerateFullPaths=true"
             ],
             "problemMatcher": "$msCompile"
         },

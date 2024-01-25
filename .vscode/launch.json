@@ -9,9 +9,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build Filebin.BlendFarm.GUI",
-            "program": "${workspaceFolder}/LogicReinc.BlendFarm/bin/Debug/net6.0/LogicReinc.BlendFarm",
+            "cwd": "${workspaceFolder}/build/bin/LogicReinc.BlendFarm/Debug/net6.0/",
+            "program": "./LogicReinc.BlendFarm",
             "args": [],
-            "cwd": "${workspaceFolder}/environment/BlendFarm.GUI",
         }
     ]
 }

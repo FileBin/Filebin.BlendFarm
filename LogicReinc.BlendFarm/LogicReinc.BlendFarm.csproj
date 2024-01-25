@@ -1,14 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(SolutionDir)/Resources.props"/>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ApplicationIcon>render.ico</ApplicationIcon>
 	<RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
+
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
+  
   <ItemGroup>
     <AvaloniaXaml Remove="Content\**" />
     <Compile Remove="Content\**" />
