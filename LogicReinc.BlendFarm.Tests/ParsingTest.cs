@@ -10,7 +10,7 @@ namespace LogicReinc.BlendFarm.Tests {
     /// </summary>
     [TestClass]
     public class ParsingTest {
-        static string[] existing_versions = new string[] { "blender-2.91.0", "blender-2.83.9" };
+        static string[] existing_versions = new string[] { "blender-2.92.0", "blender-3.6.5" };
 
         [TestMethod]
         public void GetBlenderVersions() {

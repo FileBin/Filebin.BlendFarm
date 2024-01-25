@@ -23,8 +23,8 @@ namespace LogicReinc.BlendFarm.Tests {
         private static bool REMOVE_BLENDER = false;
         private static bool REMOVE_RESULTS = false;
 
-        private static string BLEND_FILE = "BlendFarmDemo.blend";
-        private static string BLEND_VERSION = "blender-2.91.0";
+        private static string BLEND_FILE = "test/BlendfarmDemo.blend";
+        private static string BLEND_VERSION = "blender-4.0.2";
 
         private static int PORT = 18585;
         private static string THIS_NAME = "This";
@@ -178,7 +178,7 @@ namespace LogicReinc.BlendFarm.Tests {
             Assert.AreEqual(1, manager.Connected);
 
             await manager.Prepare(BLEND_VERSION);
-            await manager.Sync(SESSION);
+            await manager.Sync(BLEND_FILE);
         }
 
         [TestMethod]
@@ -238,6 +238,7 @@ namespace LogicReinc.BlendFarm.Tests {
             });
             long renderTime = watch.ElapsedMilliseconds;
 
+            Assert.IsNotNull(final);
             final.Save($"{RESULTS_DIRECTORY}/Test.Render_Managed_Chunked.png");
 
             File.WriteAllText($"{RESULTS_DIRECTORY}/Test.Render_Managed_Chunked.Info.json", JsonSerializer.Serialize(new Dictionary<string, object>()
@@ -246,7 +247,6 @@ namespace LogicReinc.BlendFarm.Tests {
                 { "RenderTime", renderTime },
             }));
 
-            Assert.IsNotNull(final);
             Assert.IsTrue(gotBitmap);
         }
 
