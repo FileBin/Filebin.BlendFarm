@@ -14,6 +14,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+
+using CustomImageConverter = LogicReinc.BlendFarm.Client.ImageTypes.ImageConverter;
+
 namespace LogicReinc.BlendFarm.Shared {
     /// <summary>
     /// Describes a render task for a specific blender version and blend file
@@ -411,7 +414,7 @@ namespace LogicReinc.BlendFarm.Shared {
         }
 
         protected void ProcessTile(RenderSubTask task, SubTaskResult tresult, ref Graphics g, ref Bitmap result, ref object drawLock, bool dontDraw = false) {
-            using (Image img = ImageConverter.Convert(tresult.Image, task.Parent.Settings.RenderFormat)) {
+            using (Image img = CustomImageConverter.Convert(tresult.Image, task.Parent.Settings.RenderFormat)) {
                 ProcessTile(task, img, ref g, ref result, ref drawLock, dontDraw);
             }
         }

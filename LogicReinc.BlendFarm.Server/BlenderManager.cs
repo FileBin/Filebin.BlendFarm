@@ -471,7 +471,6 @@ namespace LogicReinc.BlendFarm.Server {
             }
 
             try {
-
                 Directory.CreateDirectory(Path.GetFullPath(RenderData));
 
                 try {
@@ -482,14 +481,12 @@ namespace LogicReinc.BlendFarm.Server {
 
                 string json = JsonSerializer.Serialize(batch);
                 UseTemporaryFile(json, (path) => {
-
                     string cmd = GetVersionCommand(version);
                     string arg = $"--factory-startup -noaudio -b \"{Path.GetFullPath(file)}\" -P \"{GetRenderScriptPath()}\" -- \"{path}\" {USE_CONTINUATION}";
 
                     //If an continueing process is ongoing, continue instead.
                     if (RenderProcess == null || !RenderProcess.Active || !RenderProcess.IsContinueing) {
                         RenderProcess = new BlenderProcess(cmd, arg, version, file, fileId);
-
 
                         if (beforeStart != null)
                             beforeStart(RenderProcess);
@@ -503,7 +500,6 @@ namespace LogicReinc.BlendFarm.Server {
                         if (beforeEnd != null)
                             beforeEnd(RenderProcess);
                     }
-
                 });
                 return batch.Select(x => FindOutput(x.Output)).Where(x => x != null).ToList();
             } finally {

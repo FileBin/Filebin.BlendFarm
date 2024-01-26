@@ -10,8 +10,9 @@ namespace LogicReinc.BlendFarm.Client.ImageTypes {
         public static DefaultImageConverter Default { get; } = new DefaultImageConverter();
 
         public static Image Convert(byte[] bytes, string format) {
-            using (MemoryStream str = new MemoryStream(bytes))
+            using (MemoryStream str = new MemoryStream(bytes)) {
                 return Convert(str, format);
+            }
         }
         public static Image Convert(Stream str, string format) {
             format = format.ToUpper().Trim();

@@ -2,17 +2,41 @@
 	"version": "2.0.0",
 	"tasks": [
         {
-            "label": "Build Filebin.BlendFarm.GUI",
-            "command": "dotnet",
+            "label": "dotnet: build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            
             "type": "shell",
             "options": {
                 "cwd": "${workspaceFolder}"
             },
+
+            "command": "dotnet",
             "args": [
                 "build",
-                "${workspaceFolder}/LogicReinc.BlendFarm/LogicReinc.BlendFarm.csproj",
+                "${workspaceFolder}/LogicReinc.BlendFarm/LogicReinc.BlendFarm.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
-	]
+        {
+            "label": "Build Filebin.BlendFarm.GUI",
+            "group": {
+                "kind": "build",
+            },
+
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/LogicReinc.BlendFarm/LogicReinc.BlendFarm.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
 }

@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using CustomImageConverter = LogicReinc.BlendFarm.Client.ImageTypes.ImageConverter;
+
 namespace LogicReinc.BlendFarm.Client.Tasks {
     public class SplittedTask : RenderTask, IImageTask {
         private bool _isVertical;
@@ -67,7 +69,7 @@ namespace LogicReinc.BlendFarm.Client.Tasks {
                                 continue;
                             }
 
-                            using (Image img = ImageConverter.Convert(taskPart.Image, task.Parent.Settings.RenderFormat))
+                            using (Image img = CustomImageConverter.Convert(taskPart.Image, task.Parent.Settings.RenderFormat))
                                 ProcessTile(task, img, ref g, ref result, ref drawLock);
 
                             ChangeProgress(Progress + task.Value);

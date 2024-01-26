@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using CustomImageConverter = LogicReinc.BlendFarm.Client.ImageTypes.ImageConverter;
+
 namespace LogicReinc.BlendFarm.Client.Tasks {
     public class SplitChunkedTask : RenderTask, IImageTask {
         public Image FinalImage { get; private set; }
@@ -52,7 +54,7 @@ namespace LogicReinc.BlendFarm.Client.Tasks {
 
                         try {
                             SubTaskBatchResult resp = ExecuteSubTasks(node, (rsbt, rbr) => {
-                                using (Image img = ImageConverter.Convert(rbr.Data, Settings.RenderFormat))
+                                using (Image img = CustomImageConverter.Convert(rbr.Data, Settings.RenderFormat))
                                     ProcessTile(rsbt, img, ref g, ref result, ref drawLock);
 
                                 ChangeProgress(Progress + rsbt.Value);
