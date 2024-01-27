@@ -2,14 +2,13 @@
 using LogicReinc.BlendFarm.Shared;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 
 using CustomImageConverter = LogicReinc.BlendFarm.Client.ImageTypes.ImageConverter;
 
 namespace LogicReinc.BlendFarm.Client.Tasks {
-    public class ChunkedTask : QueuedExecutionTask, IImageTask {
+    public class ChunkedTask : QueuedExecutionTask, IRenderTask {
         private object _drawLock = new object();
         private Bitmap result;
         private Graphics g;
@@ -36,7 +35,7 @@ namespace LogicReinc.BlendFarm.Client.Tasks {
 
         protected override void HandleResult(RenderSubTask task, SubTaskResult tresult) {
             ChangeProgress(Progress + task.Value);
-            using (Image img = CustomImageConverter.Convert(tresult.Image, task.Parent.Settings.RenderFormat))
+            using (Image img = CustomImageConverter.Convert(tresult.ImageData, task.Parent.Settings.RenderFormat))
                 ProcessTile(task, img, ref g, ref result, ref _drawLock);
         }
 

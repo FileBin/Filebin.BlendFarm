@@ -164,7 +164,7 @@ namespace LogicReinc.BlendFarm.Client {
         /// <summary>
         /// Whenever a relevant property changed
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
 
         public RenderNode() {

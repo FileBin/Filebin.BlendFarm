@@ -44,7 +44,7 @@ namespace LogicReinc.BlendFarm.Objects {
 
         public bool FinishedAllFrames { get; set; }
 
-        public System.Drawing.Image LastImage { get; set; }
+        public Image LastImage { get; set; }
 
         public QueueItem(RenderWindow owner, OpenBlenderProject proj, RenderManagerSettings settings, string saveTo = null, int frames = 1) {
             _owner = owner;
@@ -96,7 +96,7 @@ namespace LogicReinc.BlendFarm.Objects {
                     Thread.Sleep(500);
 
                     await Task.Render();
-                    System.Drawing.Image final = ((Task is IImageTask) ? (IImageTask)Task : null)?.FinalImage;
+                    Image final = (Task as IRenderTask)?.FinalImage;
                     Thread.Sleep(500);
                     LastImage = final;
 
@@ -122,22 +122,22 @@ namespace LogicReinc.BlendFarm.Objects {
                         string filePath = Path.Combine(SaveTo, FrameFormat.Replace("#", task.Frame.ToString()));
 
                         try {
-                            File.WriteAllBytes(filePath, frame.Image);
+                            File.WriteAllBytes(filePath, frame.ImageData);
                         } catch (Exception ex) {
                             MessageWindow.Show(_owner, "Frame Save Error", $"Animation frame {task.Frame} failed to save due to:" + ex.Message);
                             return;
                         }
 
-                        using (var image = ImageConverter.Convert(frame.Image, task.Parent.Settings.RenderFormat)) {
+                        using (var image = ImageConverter.Convert(frame.ImageData, task.Parent.Settings.RenderFormat)) {
                             if (image != null) {
                                 Project.LastImage = image.ToAvaloniaBitmap();
                                 LastImage = image;
                             } else
-                                Project.LastImage = Statics.NoPreviewImage;
+                                Project.LastImage = Util.NoPreviewImage;
                         }
 
                         //Remove bytes
-                        frame.Image = null;
+                        frame.ImageData = null;
 
                         RefreshInfo();
                         window.RefreshCurrentProject();

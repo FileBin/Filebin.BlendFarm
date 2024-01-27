@@ -2,12 +2,12 @@
 using LogicReinc.BlendFarm.Client.ImageTypes;
 using LogicReinc.BlendFarm.Client.Tasks;
 using LogicReinc.BlendFarm.Shared.Communication.RenderNode;
+using LogicReinc.BlendFarm.Shared.Misc;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -52,14 +52,6 @@ namespace LogicReinc.BlendFarm.Shared {
         public double Progress { get; set; }
 
         /// <summary>
-        /// Event whenever a tile has finished rendering
-        /// </summary>
-        public event Action<RenderSubTask, Image> OnTileProcessed;
-        /// <summary>
-        /// Event whenever the result bitmap is changed
-        /// </summary>
-        public event Action<RenderSubTask, Image> OnResultUpdated;
-        /// <summary>
         /// Event whenever progress is made
         /// </summary>
         public event Action<RenderTask, double> OnProgress;
@@ -90,9 +82,10 @@ namespace LogicReinc.BlendFarm.Shared {
         }
 
 
-        public async Task<bool> Render() {
+        public async Task<RenderTaskResult> Render() {
             if (Consumed)
-                throw new InvalidOperationException("Already started render..");
+                return RenderTaskResult.AlreadyRendering();
+
             Consumed = true;
 
             List<RenderNode> pool = Nodes.Where(x => x.Connected).ToList();
@@ -117,18 +110,16 @@ namespace LogicReinc.BlendFarm.Shared {
             }));
 
             if (validNodes.Count == 0)
-                throw new InvalidOperationException("No ready nodes available");
+                return RenderTaskResult.NoReadyNodes();
             _usedNodes = validNodes;
 
             foreach (RenderNode useNode in _usedNodes)
                 useNode.UpdateException("");
 
-            bool result = await Execute();
-
+            var result = await Execute();
             return result;
         }
-        protected abstract Task<bool> Execute();
-
+        protected abstract Task<RenderTaskResult> Execute();
 
         /// <summary>
         /// Determines device performance based on past renders or default
@@ -300,7 +291,7 @@ namespace LogicReinc.BlendFarm.Shared {
                     try {
                         taskPart = ExecuteSubTask(node, task);
 
-                        if (taskPart.Image == null)
+                        if (taskPart.ImageData == null)
                             throw new Exception(taskPart.Exception?.Message ?? "Unknown Remote Exception");
 
                         //ProcessTile(task, (Bitmap)taskPart.Image, ref g, ref result, ref drawLock);
@@ -413,15 +404,10 @@ namespace LogicReinc.BlendFarm.Shared {
             return new SubTaskResult(result);
         }
 
-        protected void ProcessTile(RenderSubTask task, SubTaskResult tresult, ref Graphics g, ref Bitmap result, ref object drawLock, bool dontDraw = false) {
-            using (Image img = CustomImageConverter.Convert(tresult.Image, task.Parent.Settings.RenderFormat)) {
-                ProcessTile(task, img, ref g, ref result, ref drawLock, dontDraw);
-            }
-        }
         /// <summary>
         /// Handles an incoming tile and trigger the events as well as drawing the tile to an image/graphics
         /// </summary>
-        protected void ProcessTile(RenderSubTask task, Image part, ref Graphics g, ref Bitmap result, ref object drawLock, bool dontDraw = false) {
+        protected void ProcessTile(RenderSubTask task, SubTaskResult tresult, ref Graphics g, ref Bitmap result, ref object drawLock, bool dontDraw = false) {
             if (Cancelled)
                 return;
 
@@ -437,16 +423,11 @@ namespace LogicReinc.BlendFarm.Shared {
                         int posX = (int)(task.X * task.Parent.Settings.OutputWidth);
                         int posY = (int)(task.Parent.Settings.OutputHeight - task.Y * task.Parent.Settings.OutputHeight - tileHeight);
 
-                        g.DrawImage(part, posX, posY, tileWidth, tileHeight);
                     } else {
                         g.DrawImage(part, 0, 0, task.Parent.Settings.OutputWidth, task.Parent.Settings.OutputHeight);
                     }
                 }
-                if (OnResultUpdated != null)
-                    OnResultUpdated(task, result);
             }
-            if (OnTileProcessed != null)
-                OnTileProcessed(task, part);
         }
 
         //Util
@@ -473,53 +454,18 @@ namespace LogicReinc.BlendFarm.Shared {
         }
 
         public static RenderTask GetImageRenderTask(List<RenderNode> nodes, string session, string version, long fileId, RenderManagerSettings settings = null) {
-            RenderTask task = null;
             switch (settings?.Strategy) {
                 case RenderStrategy.Chunked:
-                    task = new ChunkedTask(nodes, session, version, fileId, settings);
-                    break;
+                    return new ChunkedTask(nodes, session, version, fileId, settings);
+
                 case RenderStrategy.SplitChunked:
-                    task = new SplitChunkedTask(nodes, session, version, fileId, settings);
-                    break;
+                    return new SplitChunkedTask(nodes, session, version, fileId, settings);
+
                 default:
                 case RenderStrategy.SplitHorizontal:
                 case RenderStrategy.SplitVertical:
-                    task = new SplittedTask(nodes, session, version, fileId, settings, settings?.Strategy == RenderStrategy.SplitVertical);
-                    break;
-            }
-            return task;
-        }
-
-
-        /// <summary>
-        /// Internally manages batch subtask results or error
-        /// </summary>
-        protected class SubTaskBatchResult {
-            public RenderBatchResult[] Results { get; set; }
-            public Exception Exception { get; set; }
-
-            public SubTaskBatchResult(Exception ex) {
-                Exception = ex;
-            }
-            public SubTaskBatchResult(params RenderBatchResult[] result) {
-                Results = result;
+                    return new SplittedTask(nodes, session, version, fileId, settings, settings?.Strategy == RenderStrategy.SplitVertical);
             }
         }
     }
-
-    /// <summary>
-    /// Manages subtask results or error
-    /// </summary>
-    public class SubTaskResult {
-        public byte[] Image { get; set; }
-        public Exception Exception { get; set; }
-
-        public SubTaskResult(Exception ex) {
-            Exception = ex;
-        }
-        public SubTaskResult(byte[] image) {
-            Image = image;
-        }
-    }
-
 }

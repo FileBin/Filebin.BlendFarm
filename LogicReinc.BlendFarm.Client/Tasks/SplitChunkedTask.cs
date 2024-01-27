@@ -3,7 +3,6 @@ using LogicReinc.BlendFarm.Shared;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,9 +11,7 @@ using System.Threading.Tasks;
 using CustomImageConverter = LogicReinc.BlendFarm.Client.ImageTypes.ImageConverter;
 
 namespace LogicReinc.BlendFarm.Client.Tasks {
-    public class SplitChunkedTask : RenderTask, IImageTask {
-        public Image FinalImage { get; private set; }
-
+    public class SplitChunkedTask : RenderTask {
         public SplitChunkedTask(List<RenderNode> nodes, string session, string version, long fileId, RenderManagerSettings settings = null) : base(nodes, session, version, fileId, settings) {
         }
 

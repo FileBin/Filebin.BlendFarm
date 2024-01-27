@@ -1,11 +1,11 @@
 ﻿using LogicReinc.BlendFarm.Client;
 using LogicReinc.BlendFarm.Server;
 using LogicReinc.BlendFarm.Shared.Communication.RenderNode;
+using LogicReinc.BlendFarm.Shared.Misc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
@@ -182,7 +182,7 @@ namespace LogicReinc.BlendFarm.Tests {
         }
 
         [TestMethod]
-        public async Task Render_Managed_Split() {
+        public async Task RenderManagedSplit() {
             Stopwatch watch = new Stopwatch();
             watch.Start();
 
@@ -192,7 +192,7 @@ namespace LogicReinc.BlendFarm.Tests {
             watch.Restart();
 
             int render = 0;
-            Bitmap final = (Bitmap)await manager.Render(BLEND_FILE, new RenderManagerSettings() {
+            RenderTaskResult final = await manager.Render(BLEND_FILE, new RenderManagerSettings() {
                 OutputWidth = 640,
                 OutputHeight = 360,
                 Strategy = RenderStrategy.SplitHorizontal,

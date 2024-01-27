@@ -65,7 +65,11 @@ namespace LogicReinc.BlendFarm.Client {
         /// Converts list of tasks to a batch request
         /// </summary>
         public static RenderBatchRequest GetRenderBatchRequest(string id, params RenderSubTask[] tasks) {
-            RenderTask mainTask = tasks.FirstOrDefault()?.Parent;
+            RenderTask? mainTask = tasks.FirstOrDefault()?.Parent;
+            
+            if (mainTask == null)
+                throw new ArgumentException("Tasks array has zero length!");
+
             return new RenderBatchRequest() {
                 TaskID = id,
                 Version = mainTask.Version,

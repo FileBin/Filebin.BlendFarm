@@ -32,9 +32,10 @@ namespace LogicReinc.BlendFarm.Windows {
         }
 
         public static async Task Show(Window owner, string title, Bitmap image, int width, int height) {
-            var window = new BitmapViewer(title, image);
-            window.Width = width;
-            window.Height = height;
+            var window = new BitmapViewer(title, image) {
+                Width = width,
+                Height = height
+            };
 
             window.Position = new PixelPoint((int)(owner.Position.X + ((owner.Width / 2) - window.Width / 2)), (int)(owner.Position.Y + ((owner.Height / 2) - window.Height / 2)));
 

@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.IO;
+﻿using System.IO;
 
 namespace LogicReinc.BlendFarm.Client.ImageTypes {
     public interface IImageConverter {

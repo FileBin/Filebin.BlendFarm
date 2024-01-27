@@ -59,8 +59,8 @@ namespace LogicReinc.BlendFarm.Objects {
             }
         }
 
-        private Bitmap _lastImage = null;
-        public Bitmap LastImage {
+        private IBitmap? _lastImage = null;
+        public IBitmap LastImage {
             get {
                 return _lastImage;
             }
@@ -71,7 +71,7 @@ namespace LogicReinc.BlendFarm.Objects {
         }
 
         public bool IsRendering => CurrentTask != null;
-        public RenderTask CurrentTask { get; private set; }
+        public RenderTask? CurrentTask { get; private set; }
 
         public List<string> CamerasAvailable { get; private set; } = new List<string>();
         public List<string> ScenesAvailable { get; private set; } = new List<string>();
@@ -80,9 +80,9 @@ namespace LogicReinc.BlendFarm.Objects {
 
 
 
-        public event Action<OpenBlenderProject, Bitmap> OnBitmapChanged;
+        public event Action<OpenBlenderProject, IBitmap> OnBitmapChanged;
         public event Action<OpenBlenderProject, bool> OnNetworkedChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         public OpenBlenderProject(string blendfile, string sessionID = null) {
             BlendFile = blendfile;
             if (sessionID != null)
@@ -97,7 +97,7 @@ namespace LogicReinc.BlendFarm.Objects {
             }
         }
 
-        public void SetRenderTask(RenderTask task) {
+        public void SetRenderTask(RenderTask? task) {
             CurrentTask = task;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTask)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRendering)));

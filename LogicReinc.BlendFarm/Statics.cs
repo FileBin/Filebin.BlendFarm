@@ -1,51 +1,43 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Avalonia;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace LogicReinc.BlendFarm {
-    public static class Statics {
+    public static class Util {
         private static object _previewImageLock = new object();
-        private static Avalonia.Media.Imaging.Bitmap _noPreviewImage { get; set; }
-        public static Avalonia.Media.Imaging.Bitmap NoPreviewImage {
+        private static IBitmap? _noPreviewImage { get; set; }
+        public static IBitmap NoPreviewImage {
             get {
                 lock (_previewImageLock) {
                     if (_noPreviewImage == null) {
-                        System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(700, 200);
-                        using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp)) {
-                            g.DrawString("Could not generate Preview\n(Some Render Formats do not support preview)",
-                                new System.Drawing.Font("Arial", 16),
-                                new System.Drawing.SolidBrush(System.Drawing.Color.Gray),
-                                5, 5);
-                        }
-                        _noPreviewImage = bmp.ToAvaloniaBitmap();
+                        _noPreviewImage = new WriteableBitmap(
+                            new PixelSize(700, 200),
+                            new Vector(96, 96),
+                            PixelFormat.Rgba8888,
+                            AlphaFormat.Opaque
+                            );
                     }
                 }
                 return _noPreviewImage;
+                //TODO: draw normal text instead of image
             }
         }
 
         public static string SanitizePath(string inputPath) {
-            if (inputPath == null)
-                return inputPath;
-
             //Fix Linux Space escape
             inputPath = inputPath.Replace("\\040", " ");
-
-
             return inputPath;
         }
-
-        public static Bitmap ToAvaloniaBitmap(this System.Drawing.Image bitmap) {
-            //TODO: This needs to be better..
-            using (MemoryStream str = new MemoryStream()) {
-                bitmap.Save(str, ImageFormat.Png);
-                str.Position = 0;
-                return new Bitmap(str);
+        
+        public static IBitmap BitmapFromBuffer(byte[] buffer) {
+            using(var ms = new MemoryStream(buffer)) {
+                return new Bitmap(ms);
             }
         }
     }
